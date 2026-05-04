@@ -1,9 +1,3 @@
-# react-native-source-editor
+# source-editor-scaffold
 
-Native source editor for React Native — wraps [STTextView](https://github.com/krzyzanowskim/STTextView) for iOS and macOS.
-
-Early development. See [issues](https://github.com/workspace-sh/react-native-source-editor/issues) for current scope.
-
-## License
-
-MIT
+Native source editor for React Native, wrapping STTextView for iOS and macOS.
