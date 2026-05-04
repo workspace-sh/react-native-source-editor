@@ -6,11 +6,13 @@ Runnable Expo SDK 55 app demonstrating `<SourceEditor />` in a split-pane layout
 
 - Xcode 15+
 - Node 20+
-- CocoaPods + the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin (STTextView is SPM-only)
+- CocoaPods + the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin (**required** — STTextView is SPM-only)
 
 ```sh
 gem install cocoapods-spm
 ```
+
+> Without the plugin gem installed locally, `pod install` will fail with `undefined method 'spm_pkg'` even though the Podfile declares `plugin 'cocoapods-spm'`. CocoaPods registers the plugin name but can't load the DSL methods.
 
 ## Run
 
