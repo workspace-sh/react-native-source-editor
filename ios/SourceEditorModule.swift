@@ -5,7 +5,13 @@ public class SourceEditorModule: Module {
     Name("SourceEditor")
 
     View(SourceEditorView.self) {
-      // Props and events land with the JS API in #5.
+      Events("onChangeText", "onSelectionChange")
+
+      Prop("text") { (view: SourceEditorView, value: String) in
+        #if os(iOS)
+        view.setText(value)
+        #endif
+      }
     }
   }
 }

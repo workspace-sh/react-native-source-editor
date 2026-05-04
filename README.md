@@ -8,15 +8,15 @@ A native source editor component for React Native, built as an Expo Module wrapp
 
 ## Platform support
 
-| Platform | Status |
-| --- | --- |
-| iOS | Planned ([#3](https://github.com/workspace-sh/react-native-source-editor/issues/3)) |
-| macOS | Planned ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) |
-| iPadOS | Roadmap |
-| Android | Stub only |
-| Windows | Roadmap |
-| Linux | Roadmap |
-| Web | Out of scope for v1 |
+| Platform | Status | Min version |
+| --- | --- | --- |
+| iOS | In progress ([#3](https://github.com/workspace-sh/react-native-source-editor/issues/3)) | 16.0 |
+| macOS | Planned ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) | 14.0 |
+| iPadOS | Roadmap | — |
+| Android | Stub only | — |
+| Windows | Roadmap | — |
+| Linux | Roadmap | — |
+| Web | Out of scope for v1 | — |
 
 ## Installation
 
@@ -27,6 +27,26 @@ npm install /path/to/react-native-source-editor
 ```
 
 Once v1 ships, it will be published as `@workspace-sh/react-native-source-editor`.
+
+### iOS / macOS — Swift Package Manager bridging
+
+STTextView is distributed only via SPM, so consumer apps need the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin to pull it in during `pod install`:
+
+```sh
+gem install cocoapods-spm
+```
+
+Then in the consumer app's `ios/Podfile`, declare the SPM source:
+
+```ruby
+plugin 'cocoapods-spm'
+
+spm_pkg 'STTextView',
+  :url => 'https://github.com/krzyzanowskim/STTextView.git',
+  :from => '2.3.10'
+```
+
+(This requirement goes away once CocoaPods or Expo Modules gain first-class SPM support.)
 
 ## Roadmap
 
