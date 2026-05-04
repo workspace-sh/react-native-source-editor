@@ -16,15 +16,17 @@ gem install cocoapods-spm
 
 ## Run
 
-From `example/ios-app/`:
+From the **repo root**:
 
 ```sh
-npm install
-cd ios && pod install && cd ..
-npx expo run:ios
+npm run ios:plugin    # one-time: gem install cocoapods-spm
+npm run ios:setup     # one-time: npm install in example/ios-app
+npm run ios:run       # builds, pods, and launches on the iOS simulator
 ```
 
-Or open `ios/SourceEditorExampleiOS.xcworkspace` in Xcode and ⌘R.
+`expo run:ios` handles `pod install` for you on first build (and skips it after when nothing changed). The `ios:pods` script is available for the rare case you want to re-pod explicitly.
+
+Or open `ios/SourceEditorExampleiOS.xcworkspace` in Xcode and ⌘R after a one-off `npm run ios:pods`.
 
 ## How it consumes the local module
 

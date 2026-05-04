@@ -14,7 +14,7 @@
     "prepublishOnly": "expo-module prepublishOnly",
     "expo-module": "expo-module",
     "ios:plugin": "gem install cocoapods-spm",
-    "ios:setup": "cd example/ios-app && npm install && cd ios && pod install",
+    "ios:setup": "cd example/ios-app && npm install",
     "ios:pods": "cd example/ios-app/ios && pod install",
     "ios:start": "cd example/ios-app && npx expo start --dev-client",
     "ios:start:clean": "watchman watch-del-all && cd example/ios-app && npx expo start --dev-client --clear",
