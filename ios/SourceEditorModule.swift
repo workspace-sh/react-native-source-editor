@@ -8,7 +8,7 @@ public class SourceEditorModule: Module {
       Events("onChangeText", "onSelectionChange")
 
       Prop("text") { (view: SourceEditorView, value: String) in
-        #if os(iOS)
+        #if os(iOS) || os(macOS)
         view.setText(value)
         #endif
       }
