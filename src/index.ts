@@ -1,3 +1,5 @@
-export { default } from './SourceEditorModule';
+export { default } from './SourceEditor';
+export { default as SourceEditor } from './SourceEditor';
 export { default as SourceEditorView } from './SourceEditorView';
-export * from  './SourceEditor.types';
+export { default as SourceEditorModule } from './SourceEditorModule';
+export * from './SourceEditor.types';

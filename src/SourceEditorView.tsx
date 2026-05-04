@@ -3,9 +3,17 @@ import * as React from 'react';
 
 import { SourceEditorViewProps } from './SourceEditor.types';
 
-const NativeView: React.ComponentType<SourceEditorViewProps> =
-  requireNativeView('SourceEditor');
+export type NativeSourceEditorRef = {
+  focus: () => Promise<void>;
+  blur: () => Promise<void>;
+};
 
-export default function SourceEditorView(props: SourceEditorViewProps) {
-  return <NativeView {...props} />;
-}
+const NativeView: React.ComponentType<
+  SourceEditorViewProps & React.RefAttributes<NativeSourceEditorRef>
+> = requireNativeView('SourceEditor');
+
+const SourceEditorView = React.forwardRef<NativeSourceEditorRef, SourceEditorViewProps>(
+  (props, ref) => <NativeView {...props} ref={ref} />
+);
+
+export default SourceEditorView;
