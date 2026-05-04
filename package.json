@@ -9,11 +9,18 @@
     "clean": "expo-module clean",
     "lint": "expo-module lint",
     "test": "expo-module test",
+    "typecheck": "tsc --noEmit",
     "prepare": "expo-module prepare",
     "prepublishOnly": "expo-module prepublishOnly",
     "expo-module": "expo-module",
-    "open:ios": "xed example/ios",
-    "open:android": "open -a \"Android Studio\" example/android"
+    "ios:plugin": "gem install cocoapods-spm",
+    "ios:clean": "cd example/ios-app/ios && rm -rf build Pods Podfile.lock",
+    "ios:start": "cd example/ios-app && npx expo start --dev-client",
+    "ios:clear": "cd example/ios-app && watchman watch-del-all && npx expo start --clear",
+    "ios:run": "cd example/ios-app && npx expo run:ios",
+    "ios:run:device": "cd example/ios-app && npx expo run:ios --device",
+    "ios:run:device:release": "cd example/ios-app && npx expo run:ios --device --configuration Release",
+    "ios:dev": "concurrently \"npm run ios:clear\" \"npm run ios:run\""
   },
   "keywords": [
     "react-native",
@@ -42,6 +49,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/react": "~19.1.1",
+    "concurrently": "^9.1.0",
     "expo-module-scripts": "^55.0.2",
     "expo": "^55.0.18",
     "react-native": "0.82.1"

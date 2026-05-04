@@ -4,7 +4,7 @@ A native source editor component for React Native, built as an Expo Module wrapp
 
 ## Status
 
-**Early development — not yet usable.** Current scope is module scaffolding and platform targets. The native STTextView bridge, JS API, theming, and example app are tracked in the [issues](https://github.com/workspace-sh/react-native-source-editor/issues).
+**Early development — not yet usable.** v1 scope is the iOS + macOS wrapper, JS API surface, and example apps. Tracking lives on the [project board](https://github.com/orgs/workspace-sh/projects/2).
 
 ## Platform support
 
@@ -18,75 +18,49 @@ A native source editor component for React Native, built as an Expo Module wrapp
 | Linux | Roadmap | — |
 | Web | Out of scope for v1 | — |
 
-## Installation
-
-Not yet published to npm. Consume via local path while v1 is in development:
+## Quick start
 
 ```sh
 npm install /path/to/react-native-source-editor
+gem install cocoapods-spm  # required: STTextView is SPM-only
 ```
-
-Once v1 ships, it will be published as `@workspace-sh/react-native-source-editor`.
-
-### iOS / macOS — Swift Package Manager bridging
-
-STTextView is distributed only via SPM, so consumer apps need the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin to pull it in during `pod install`:
-
-```sh
-gem install cocoapods-spm
-```
-
-Then in the consumer app's `ios/Podfile`, declare the SPM source:
-
-```ruby
-plugin 'cocoapods-spm'
-
-spm_pkg 'STTextView',
-  :url => 'https://github.com/krzyzanowskim/STTextView.git',
-  :from => '2.3.10'
-```
-
-(This requirement goes away once CocoaPods or Expo Modules gain first-class SPM support.)
-
-## Usage
 
 ```tsx
-import { useRef } from 'react';
-import SourceEditor, { type SourceEditorRef } from '@workspace-sh/react-native-source-editor';
+import SourceEditor from '@workspace-sh/react-native-source-editor';
 
-export default function Editor() {
-  const ref = useRef<SourceEditorRef>(null);
-
-  return (
-    <SourceEditor
-      ref={ref}
-      defaultValue="// hello"
-      editable
-      onChangeText={(text) => console.log(text)}
-      onSelectionChange={(sel) => console.log(sel)}
-      style={{ flex: 1 }}
-    />
-  );
-}
+<SourceEditor defaultValue="// hello" editable style={{ flex: 1 }} />
 ```
 
-Imperative API on the ref: `focus()`, `blur()`, `getSelection()`. Use `value` for controlled mode, `defaultValue` for uncontrolled.
+Full setup (Podfile snippet, deployment targets) → [docs/installation.md](docs/installation.md)
+Full API (props + ref handle) → [docs/usage.md](docs/usage.md)
+Runnable apps → [docs/examples.md](docs/examples.md)
 
 ## Roadmap
 
 - **v1** — STTextView wrapper for iOS and macOS, basic text + selection + theming
-- **v1.1** — Line numbers gutter, font customisation
+- **v1.1** — Line numbers gutter ([#10](https://github.com/workspace-sh/react-native-source-editor/issues/10)), font customisation
 - **Future** — iPadOS, Android (TextKit alternative), Windows, Linux, Web
 
 ## Development
 
 ```sh
 npm install
-npm run build      # expo-module build
-npx tsc --noEmit   # typecheck
+npm run build       # expo-module build
+npm run typecheck   # tsc --noEmit
 ```
 
-The full backlog and progress live on the [project board](https://github.com/orgs/workspace-sh/projects/2).
+### Running the iOS example
+
+```sh
+npm run ios:plugin           # one-time: gem install cocoapods-spm
+cd example/ios-app && npm install && cd -    # one-time
+npm run ios:run              # build + launch on iOS simulator
+npm run ios:dev              # concurrently: clean Metro + run:ios
+```
+
+Other scripts: `ios:start`, `ios:clear`, `ios:run:device`, `ios:run:device:release`. Pod install is handled by `expo run:ios` (Expo CNG) — no separate `ios:pods`.
+
+See [docs/installation.md](docs/installation.md) for why `cocoapods-spm` is required.
 
 ## License
 

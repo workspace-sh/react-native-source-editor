@@ -27,7 +27,7 @@ class SourceEditorView: ExpoView {
       }
     )
     textDelegate = delegate
-    textView.delegate = delegate
+    textView.textDelegate = delegate
     addSubview(textView)
   }
 
