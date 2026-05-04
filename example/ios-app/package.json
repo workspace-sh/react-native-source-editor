@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/ui": "~55.0.13",
     "expo": "~55.0.19",
     "expo-build-properties": "~55.0.5",
     "expo-glass-effect": "~55.0.10",
