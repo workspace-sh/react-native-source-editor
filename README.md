@@ -10,8 +10,8 @@ A native source editor component for React Native, built as an Expo Module wrapp
 
 | Platform | Status | Min version |
 | --- | --- | --- |
-| iOS | In progress ([#3](https://github.com/workspace-sh/react-native-source-editor/issues/3)) | 16.0 |
-| macOS | Planned ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) | 14.0 |
+| iOS | Done ([#3](https://github.com/workspace-sh/react-native-source-editor/issues/3)) | 16.0 |
+| macOS | In progress ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) | 14.0 |
 | iPadOS | Roadmap | — |
 | Android | Stub only | — |
 | Windows | Roadmap | — |
