@@ -18,8 +18,12 @@
   "keywords": [
     "react-native",
     "expo",
-    "source-editor-scaffold",
-    "SourceEditor"
+    "expo-module",
+    "text-editor",
+    "source-editor",
+    "STTextView",
+    "ios",
+    "macos"
   ],
   "repository": {
     "type": "git",

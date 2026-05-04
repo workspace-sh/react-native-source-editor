@@ -1,9 +1,16 @@
 {
-  "platforms": ["apple", "android", "web"],
+  "platforms": [
+    "apple",
+    "android"
+  ],
   "apple": {
-    "modules": ["SourceEditorModule"]
+    "modules": [
+      "SourceEditorModule"
+    ]
   },
   "android": {
-    "modules": ["sh.workspace.sourceeditor.SourceEditorModule"]
+    "modules": [
+      "sh.workspace.sourceeditor.SourceEditorModule"
+    ]
   }
 }
