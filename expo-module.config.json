@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["SourceEditorModule"]
+  },
+  "android": {
+    "modules": ["sh.workspace.sourceeditor.SourceEditorModule"]
+  }
+}
