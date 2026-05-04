@@ -53,6 +53,28 @@ class SourceEditorView: ExpoView {
   func blurEditor() {
     textView.resignFirstResponder()
   }
+
+  func setFont(family: String?, size: Double?) {
+    let resolvedSize = CGFloat(size ?? 14)
+    if let family = family, let custom = UIFont(name: family, size: resolvedSize) {
+      textView.font = custom
+    } else {
+      textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
+    }
+  }
+
+  func setTheme(_ theme: String) {
+    switch theme {
+    case "light":
+      overrideUserInterfaceStyle = .light
+    case "dark":
+      overrideUserInterfaceStyle = .dark
+    default:
+      overrideUserInterfaceStyle = .unspecified
+    }
+    textView.backgroundColor = .systemBackground
+    textView.textColor = .label
+  }
 }
 
 private class TextDelegate: NSObject, STTextViewDelegate {
@@ -134,6 +156,28 @@ class SourceEditorView: ExpoView {
     if window?.firstResponder === textView {
       window?.makeFirstResponder(nil)
     }
+  }
+
+  func setFont(family: String?, size: Double?) {
+    let resolvedSize = CGFloat(size ?? 14)
+    if let family = family, let custom = NSFont(name: family, size: resolvedSize) {
+      textView.font = custom
+    } else {
+      textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
+    }
+  }
+
+  func setTheme(_ theme: String) {
+    switch theme {
+    case "light":
+      appearance = NSAppearance(named: .aqua)
+    case "dark":
+      appearance = NSAppearance(named: .darkAqua)
+    default:
+      appearance = nil
+    }
+    textView.backgroundColor = .textBackgroundColor
+    textView.textColor = .textColor
   }
 }
 

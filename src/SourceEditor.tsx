@@ -13,6 +13,8 @@ const SourceEditor = React.forwardRef<SourceEditorRef, SourceEditorProps>(
       value,
       defaultValue,
       editable = true,
+      font,
+      theme = 'auto',
       onChangeText,
       onSelectionChange,
       style,
@@ -47,6 +49,8 @@ const SourceEditor = React.forwardRef<SourceEditorRef, SourceEditorProps>(
         ref={nativeRef}
         text={text}
         editable={editable}
+        font={font}
+        theme={theme}
         style={style}
         onChangeText={(event) => {
           const next = event.nativeEvent.text;
