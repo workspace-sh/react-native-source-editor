@@ -1,0 +1,40 @@
+# SourceEditor — iOS example
+
+Runnable Expo SDK 55 app demonstrating `<SourceEditor />` in a split-pane layout alongside React Native components (`Switch`, `Button`, `SafeAreaView`).
+
+## Prerequisites
+
+- Xcode 15+
+- Node 20+
+- CocoaPods + the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin (STTextView is SPM-only)
+
+```sh
+gem install cocoapods-spm
+```
+
+## Run
+
+From `example/ios-app/`:
+
+```sh
+npm install
+cd ios && pod install && cd ..
+npx expo run:ios
+```
+
+Or open `ios/SourceEditorExampleiOS.xcworkspace` in Xcode and ⌘R.
+
+## How it consumes the local module
+
+There's no `file:..` dependency. Module resolution is wired through:
+
+- `package.json` → `expo.autolinking.nativeModulesDir: '../..'` (native autolinking)
+- `metro.config.js` → `extraNodeModules`, `watchFolders`, and a `blockList` for the parent's `react` / `react-native` (JS bundling)
+
+This is the same pattern `create-expo-module`'s `createExampleApp.ts` uses, adjusted for the two-level depth (`example/ios-app/` instead of `example/`).
+
+## Notes
+
+- iOS deployment target is pinned to 16.0 via `expo-build-properties` (STTextView's floor)
+- Re-running `npx expo prebuild` will regenerate `ios/` — but the Podfile patch (`plugin 'cocoapods-spm'` + `spm_pkg`) needs to be re-applied
+- macOS example lives in `example/macos-app/` (tracked in #17)
