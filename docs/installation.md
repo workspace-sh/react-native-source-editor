@@ -35,13 +35,22 @@ gem install cocoapods-spm
 
 In the consumer app's `ios/Podfile`, add the plugin and the SPM package source near the top:
 
+Top of the Podfile:
+
 ```ruby
 plugin 'cocoapods-spm'
+```
 
+Inside your app's `target` block:
+
+```ruby
 spm_pkg 'STTextView',
   :url => 'https://github.com/krzyzanowskim/STTextView.git',
-  :from => '2.3.10'
+  :version => '2.3.10',
+  :products => ['STTextView']
 ```
+
+You also need `use_frameworks!` enabled (cocoapods-spm requires it). For Expo apps, set `useFrameworks: 'static'` in `expo-build-properties` so prebuild's Podfile activates it.
 
 Then `cd ios && pod install` as usual.
 

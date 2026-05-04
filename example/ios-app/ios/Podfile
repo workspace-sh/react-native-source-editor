@@ -27,7 +27,8 @@ target 'SourceEditorExampleiOS' do
 
   spm_pkg 'STTextView',
     :url => 'https://github.com/krzyzanowskim/STTextView.git',
-    :from => '2.3.10'
+    :version => '2.3.10',
+    :products => ['STTextView']
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
     config_command = ['node', '-e', "process.argv=['', '', 'config'];require('@react-native-community/cli').run()"];
