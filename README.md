@@ -52,14 +52,15 @@ npm run typecheck   # tsc --noEmit
 ### Running the iOS example
 
 ```sh
-npm run ios:setup   # one-time: npm install + pod install in example/ios-app
-npm run ios:run     # build + launch on iOS simulator
-npm run ios:dev     # concurrently: clean Metro start + run:ios
+npm run ios:plugin           # one-time: gem install cocoapods-spm
+cd example/ios-app && npm install && cd -    # one-time
+npm run ios:run              # build + launch on iOS simulator
+npm run ios:dev              # concurrently: clean Metro + run:ios
 ```
 
-Other handy scripts: `ios:start`, `ios:start:clean`, `ios:run:device`, `ios:run:release`, `ios:run:device:release`, `ios:pods`, `ios:open` (Xcode).
+Other scripts: `ios:start`, `ios:clear`, `ios:run:device`, `ios:run:device:release`. Pod install is handled by `expo run:ios` (Expo CNG) — no separate `ios:pods`.
 
-Prereq: `gem install cocoapods-spm` once globally — STTextView is SPM-only. See [docs/installation.md](docs/installation.md) for the full story.
+See [docs/installation.md](docs/installation.md) for why `cocoapods-spm` is required.
 
 ## License
 

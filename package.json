@@ -14,16 +14,12 @@
     "prepublishOnly": "expo-module prepublishOnly",
     "expo-module": "expo-module",
     "ios:plugin": "gem install cocoapods-spm",
-    "ios:setup": "cd example/ios-app && npm install",
-    "ios:pods": "cd example/ios-app/ios && pod install",
     "ios:start": "cd example/ios-app && npx expo start --dev-client",
-    "ios:start:clean": "watchman watch-del-all && cd example/ios-app && npx expo start --dev-client --clear",
+    "ios:clear": "cd example/ios-app && watchman watch-del-all && npx expo start --clear",
     "ios:run": "cd example/ios-app && npx expo run:ios",
     "ios:run:device": "cd example/ios-app && npx expo run:ios --device",
-    "ios:run:release": "cd example/ios-app && npx expo run:ios --configuration Release",
     "ios:run:device:release": "cd example/ios-app && npx expo run:ios --device --configuration Release",
-    "ios:dev": "concurrently \"npm run ios:start:clean\" \"npm run ios:run\"",
-    "ios:open": "xed example/ios-app/ios"
+    "ios:dev": "concurrently \"npm run ios:clear\" \"npm run ios:run\""
   },
   "keywords": [
     "react-native",

@@ -20,13 +20,18 @@ From the **repo root**:
 
 ```sh
 npm run ios:plugin    # one-time: gem install cocoapods-spm
-npm run ios:setup     # one-time: npm install in example/ios-app
+cd example/ios-app && npm install && cd -    # one-time
 npm run ios:run       # builds, pods, and launches on the iOS simulator
 ```
 
-`expo run:ios` handles `pod install` for you on first build (and skips it after when nothing changed). The `ios:pods` script is available for the rare case you want to re-pod explicitly.
+`expo run:ios` handles `pod install` automatically — we lean on Expo's CNG and don't ship a separate pods script.
 
-Or open `ios/SourceEditorExampleiOS.xcworkspace` in Xcode and ⌘R after a one-off `npm run ios:pods`.
+Other scripts (mirroring the Workspace `mobile:*` pattern):
+
+- `ios:start` / `ios:clear` — Metro dev server (clear = watchman wipe + `--clear`)
+- `ios:run` / `ios:run:device` / `ios:run:device:release` — build + launch variants
+- `ios:dev` — `concurrently` Metro + run:ios
+- `ios:plugin` — one-time `gem install cocoapods-spm` (only ours; required because STTextView is SPM-only)
 
 ## How it consumes the local module
 
