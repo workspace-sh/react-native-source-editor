@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop]
+
+jobs:
+  typecheck:
+    name: Typecheck (lib + example)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root deps
+        run: npm ci
+
+      - name: Typecheck library
+        run: npx tsc --noEmit
+
+      - name: Install example deps
+        run: cd example/ios-app && npm ci
+
+      - name: Typecheck example
+        run: cd example/ios-app && npx tsc --noEmit
+
+  build-ios:
+    name: Build (iOS, Expo CNG)
+    runs-on: macos-latest
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Install cocoapods + cocoapods-spm
+        run: |
+          gem install cocoapods
+          gem install cocoapods-spm
+
+      - name: Install root deps
+        run: npm ci
+
+      - name: Install example deps
+        run: cd example/ios-app && npm ci
+
+      - name: Pod install (Expo wrapper)
+        run: cd example/ios-app && npx pod-install
+
+      - name: xcodebuild
+        run: |
+          cd example/ios-app/ios
+          set -o pipefail
+          xcodebuild \
+            -workspace SourceEditorExampleiOS.xcworkspace \
+            -scheme SourceEditorExampleiOS \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+  # build-macos: pending #17 (chore: macOS example app)
+  # Will be a sibling job: runs-on macos-latest, uses react-native run-macos
+  # toolchain (NOT Expo CNG), needs cocoapods-spm too.
