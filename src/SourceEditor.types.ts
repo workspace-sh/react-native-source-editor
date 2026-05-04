@@ -11,9 +11,18 @@ export type ChangeTextEventPayload = {
 
 export type SelectionChangeEventPayload = Selection;
 
+export type FontConfig = {
+  family?: string;
+  size?: number;
+};
+
+export type Theme = 'light' | 'dark' | 'auto';
+
 export type SourceEditorViewProps = {
   text?: string;
   editable?: boolean;
+  font?: FontConfig;
+  theme?: Theme;
   onChangeText?: (event: { nativeEvent: ChangeTextEventPayload }) => void;
   onSelectionChange?: (event: { nativeEvent: SelectionChangeEventPayload }) => void;
   style?: StyleProp<ViewStyle>;
@@ -23,6 +32,8 @@ export type SourceEditorProps = {
   value?: string;
   defaultValue?: string;
   editable?: boolean;
+  font?: FontConfig;
+  theme?: Theme;
   onChangeText?: (text: string) => void;
   onSelectionChange?: (selection: Selection) => void;
   style?: StyleProp<ViewStyle>;
