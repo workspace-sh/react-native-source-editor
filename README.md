@@ -11,7 +11,7 @@ A native source editor component for React Native, built as an Expo Module wrapp
 | Platform | Status | Min version |
 | --- | --- | --- |
 | iOS | Done ([#3](https://github.com/workspace-sh/react-native-source-editor/issues/3)) | 16.0 |
-| macOS | In progress ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) | 14.0 |
+| macOS | Done ([#4](https://github.com/workspace-sh/react-native-source-editor/issues/4)) | 14.0 |
 | iPadOS | Roadmap | — |
 | Android | Stub only | — |
 | Windows | Roadmap | — |
@@ -47,6 +47,30 @@ spm_pkg 'STTextView',
 ```
 
 (This requirement goes away once CocoaPods or Expo Modules gain first-class SPM support.)
+
+## Usage
+
+```tsx
+import { useRef } from 'react';
+import SourceEditor, { type SourceEditorRef } from '@workspace-sh/react-native-source-editor';
+
+export default function Editor() {
+  const ref = useRef<SourceEditorRef>(null);
+
+  return (
+    <SourceEditor
+      ref={ref}
+      defaultValue="// hello"
+      editable
+      onChangeText={(text) => console.log(text)}
+      onSelectionChange={(sel) => console.log(sel)}
+      style={{ flex: 1 }}
+    />
+  );
+}
+```
+
+Imperative API on the ref: `focus()`, `blur()`, `getSelection()`. Use `value` for controlled mode, `defaultValue` for uncontrolled.
 
 ## Roadmap
 

@@ -41,6 +41,18 @@ class SourceEditorView: ExpoView {
       textView.text = value
     }
   }
+
+  func setEditable(_ value: Bool) {
+    textView.isEditable = value
+  }
+
+  func focusEditor() {
+    textView.becomeFirstResponder()
+  }
+
+  func blurEditor() {
+    textView.resignFirstResponder()
+  }
 }
 
 private class TextDelegate: NSObject, STTextViewDelegate {
@@ -107,6 +119,20 @@ class SourceEditorView: ExpoView {
   func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
+    }
+  }
+
+  func setEditable(_ value: Bool) {
+    textView.isEditable = value
+  }
+
+  func focusEditor() {
+    window?.makeFirstResponder(textView)
+  }
+
+  func blurEditor() {
+    if window?.firstResponder === textView {
+      window?.makeFirstResponder(nil)
     }
   }
 }
