@@ -62,37 +62,40 @@ Inline \`code\` looks like this. Switch to **Preview** to see the rendered Markd
   "downloads": 0
 }
 `,
-  javascript: `import SourceEditor from '@workspace-sh/react-native-source-editor';
+  javascript: `// Switch to Preview to run this and see console output.
+const name = 'SourceEditor';
+const features = ['markdown', 'json', 'js', 'ts', 'html'];
 
-// Render the editor in a controlled component.
-function Editor({ initial }) {
-  const [text, setText] = useState(initial);
+console.log('Hello from', name);
+console.log('Supported:', features);
+console.info('console.info works too');
+console.warn('and console.warn');
 
-  return (
-    <SourceEditor
-      value={text}
-      editable
-      language="markdown"
-      onChangeText={setText}
-    />
-  );
+try {
+  JSON.parse('not json');
+} catch (e) {
+  console.error('Caught:', e.message);
 }
-
-const VERSION = 1.0;
 `,
-  typescript: `import SourceEditor, {
-  type SourceEditorProps,
-  type SourceEditorRef,
-  type Language,
-} from '@workspace-sh/react-native-source-editor';
+  typescript: `// Types are stripped before execution; the rest runs as plain JS.
+type Greeting = 'hello' | 'hi' | 'hey';
 
-interface EditorProps extends SourceEditorProps {
-  initial: string;
+interface Person {
+  name: string;
+  greeting: Greeting;
 }
 
-const VERSION: number = 1.0;
-const ENABLED: boolean = true;
-const LANGUAGES: Language[] = ['markdown', 'json', 'javascript'];
+const people: Person[] = [
+  { name: 'Alice', greeting: 'hello' },
+  { name: 'Bob', greeting: 'hey' },
+];
+
+people.forEach((p) => {
+  console.log(\`\${p.greeting}, \${p.name}!\`);
+});
+
+const counter: number = 42;
+console.log('Counter:', counter);
 `,
   html: `<!DOCTYPE html>
 <html>
@@ -165,23 +168,28 @@ function Demo() {
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
 
-  const isPreviewable = language === 'markdown' || language === 'html';
+  const isPreviewable =
+    language === 'markdown' ||
+    language === 'html' ||
+    language === 'javascript' ||
+    language === 'typescript';
   const showPreview = isPreviewable && viewMode === 'preview';
 
   const html = useMemo(() => {
     if (!showPreview) return '';
     if (language === 'html') return content;
-    // markdown
-    const body = marked.parse(content, { async: false }) as string;
-    return wrapMarkdownHTML(body, insets.top, bottomBarHeight);
+    if (language === 'markdown') {
+      const body = marked.parse(content, { async: false }) as string;
+      return wrapMarkdownHTML(body, insets.top, bottomBarHeight);
+    }
+    // javascript / typescript — execute and capture console output
+    const js = language === 'typescript' ? stripTSTypes(content) : content;
+    return wrapJSConsoleHTML(js, insets.top, bottomBarHeight);
   }, [showPreview, language, content, insets.top, bottomBarHeight]);
 
   const onLanguageChange = (lang: DemoLanguage) => {
     setLanguage(lang);
     setContent(SAMPLES[lang]);
-    if (lang !== 'markdown' && lang !== 'html') {
-      setViewMode('source');
-    }
   };
 
   // Auto-focus the editor (and surface the keyboard) in source mode.
@@ -304,6 +312,120 @@ function Demo() {
       </View>
     </View>
   );
+}
+
+// Tiny TS-to-JS strip — handles the common shapes we ship in samples
+// (interface/type declarations, simple `: Type` annotations, `as Type`
+// casts, `import type {...}`). Not a real type-checker; good enough for
+// the example's playground purpose.
+function stripTSTypes(ts: string): string {
+  let s = ts;
+  // `import type { ... } from '...'`
+  s = s.replace(/^\s*import\s+type\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?\s*$/gm, '');
+  // `interface Foo (extends Bar) { ... }` (assumes closing brace at start of line)
+  s = s.replace(/^\s*interface\s+\w+(?:\s+extends\s+[^{]+)?\s*\{[\s\S]*?^\}\s*$/gm, '');
+  // `type Foo = ...;`
+  s = s.replace(/^\s*type\s+\w+\s*=\s*[^;\n]+;?\s*$/gm, '');
+  // `: Type` (or `: Type[]`, `: A | B`) before `=`, `,`, `)`, `{`, EOL
+  s = s.replace(/(\w+\s*\??)\s*:\s*[\w<>\[\]\|&\s,.'"]+?(?=\s*[=,)\{\n;])/g, '$1');
+  // `as Type` casts
+  s = s.replace(/\s+as\s+[\w<>\[\]]+/g, '');
+  return s;
+}
+
+function wrapJSConsoleHTML(
+  source: string,
+  topInset: number,
+  bottomInset: number
+): string {
+  // Inject the user's source as JSON so we can parse + run it inside the
+  // wrapper without escape-string gymnastics.
+  const sourceJson = JSON.stringify(source);
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: ${topInset + 16}px 16px ${bottomInset + 16}px;
+    background: light-dark(#fff, #000);
+    color: light-dark(#1d1d1f, #f2f2f7);
+  }
+  .line { padding: 4px 8px; border-radius: 4px; white-space: pre-wrap; word-break: break-word; }
+  .line + .line { margin-top: 2px; }
+  .line.warn { color: light-dark(#995700, #ffd60a); background: light-dark(#fff8e1, #2a2200); }
+  .line.error { color: light-dark(#c00, #ff453a); background: light-dark(#ffeaea, #2a0000); }
+  .line.info { color: light-dark(#0064cc, #64d2ff); }
+  .line.debug { opacity: 0.65; }
+  .line .marker { opacity: 0.5; margin-right: 8px; }
+  .empty { opacity: 0.5; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="console"></div>
+<script>
+(function () {
+  var out = document.getElementById('console');
+  var entries = 0;
+
+  function fmt(v) {
+    if (v === null) return 'null';
+    if (v === undefined) return 'undefined';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'function') return 'ƒ ' + (v.name || 'anonymous');
+    if (v instanceof Error) return v.stack || (v.name + ': ' + v.message);
+    try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
+  }
+
+  function append(level, args) {
+    entries++;
+    var line = document.createElement('div');
+    line.className = 'line ' + level;
+    var marker = document.createElement('span');
+    marker.className = 'marker';
+    marker.textContent = level === 'log' ? '›' : level.toUpperCase();
+    line.appendChild(marker);
+    line.appendChild(document.createTextNode(args.map(fmt).join(' ')));
+    out.appendChild(line);
+  }
+
+  ['log', 'info', 'warn', 'error', 'debug'].forEach(function (level) {
+    var orig = console[level];
+    console[level] = function () {
+      var args = Array.prototype.slice.call(arguments);
+      append(level, args);
+      if (orig) orig.apply(console, args);
+    };
+  });
+
+  window.addEventListener('error', function (e) {
+    append('error', [e.error || e.message]);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    append('error', ['Unhandled rejection:', e.reason]);
+  });
+
+  try {
+    new Function(${sourceJson})();
+  } catch (e) {
+    append('error', [e]);
+  }
+
+  if (entries === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = '(no console output)';
+    out.appendChild(empty);
+  }
+})();
+</script>
+</body>
+</html>`;
 }
 
 function wrapMarkdownHTML(
