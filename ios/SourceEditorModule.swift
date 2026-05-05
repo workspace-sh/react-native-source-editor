@@ -5,6 +5,13 @@ struct FontConfig: Record {
   @Field var size: Double?
 }
 
+struct ContentInsets: Record {
+  @Field var top: Double = 0
+  @Field var bottom: Double = 0
+  @Field var left: Double = 0
+  @Field var right: Double = 0
+}
+
 public class SourceEditorModule: Module {
   public func definition() -> ModuleDefinition {
     Name("SourceEditor")
@@ -33,6 +40,17 @@ public class SourceEditorModule: Module {
       Prop("theme") { (view: SourceEditorView, value: String) in
         #if os(iOS) || os(macOS)
         view.setTheme(value)
+        #endif
+      }
+
+      Prop("contentInsets") { (view: SourceEditorView, value: ContentInsets) in
+        #if os(iOS) || os(macOS)
+        view.setContentInsets(
+          top: value.top,
+          bottom: value.bottom,
+          left: value.left,
+          right: value.right
+        )
         #endif
       }
 

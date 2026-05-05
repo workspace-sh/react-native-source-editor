@@ -14,7 +14,9 @@
     "prepublishOnly": "expo-module prepublishOnly",
     "expo-module": "expo-module",
     "ios:plugin": "gem install cocoapods-spm",
-    "ios:clean": "cd example/ios-app/ios && rm -rf build Pods Podfile.lock",
+    "ios:install": "cd example/ios-app && npm install",
+    "ios:clean": "rm -rf example/ios-app/ios",
+    "ios:prebuild": "cd example/ios-app && npx expo prebuild --platform ios",
     "ios:start": "cd example/ios-app && npx expo start --dev-client",
     "ios:clear": "cd example/ios-app && watchman watch-del-all && npx expo start --clear",
     "ios:run": "cd example/ios-app && npx expo run:ios",
@@ -46,7 +48,9 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/workspace-sh/react-native-source-editor#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@expo/config-plugins": "~55.0.8"
+  },
   "devDependencies": {
     "@types/react": "~19.1.1",
     "concurrently": "^9.1.0",

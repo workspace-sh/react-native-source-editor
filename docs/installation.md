@@ -20,10 +20,15 @@ These are STTextView's floors. Bump your app's targets accordingly. For Expo app
 ```json
 {
   "plugins": [
-    ["expo-build-properties", { "ios": { "deploymentTarget": "16.0" } }]
+    "@workspace-sh/react-native-source-editor",
+    ["expo-build-properties", {
+      "ios": { "deploymentTarget": "16.0", "useFrameworks": "static" }
+    }]
   ]
 }
 ```
+
+`useFrameworks: "static"` is required because `cocoapods-spm` (used to bridge STTextView's SPM-only distribution) needs `use_frameworks!`.
 
 ## Swift Package Manager bridging
 
@@ -33,29 +38,27 @@ STTextView is distributed only via SPM, so consumer apps need the [`cocoapods-sp
 gem install cocoapods-spm
 ```
 
-In the consumer app's `ios/Podfile`, add the plugin and the SPM package source near the top:
+The Podfile mods it requires (`plugin 'cocoapods-spm'` plus the `spm_pkg 'STTextView'` block) are injected automatically by our config plugin during `expo prebuild` — you don't hand-edit `Podfile`. Just add the package to `app.json` plugins as shown above.
 
-Top of the Podfile:
-
-```ruby
-plugin 'cocoapods-spm'
-```
-
-Inside your app's `target` block:
-
-```ruby
-spm_pkg 'STTextView',
-  :url => 'https://github.com/krzyzanowskim/STTextView.git',
-  :version => '2.3.10',
-  :products => ['STTextView']
-```
-
-You also need `use_frameworks!` enabled (cocoapods-spm requires it). For Expo apps, set `useFrameworks: 'static'` in `expo-build-properties` so prebuild's Podfile activates it.
-
-Then `cd ios && pod install` as usual.
-
-This requirement goes away once CocoaPods or Expo Modules gain first-class SPM support.
+> If you're not using Expo CNG (i.e. you manage `ios/` directly), add the snippets manually:
+>
+> ```ruby
+> plugin 'cocoapods-spm'
+>
+> # …
+>
+> target 'YourApp' do
+>   use_expo_modules!
+>
+>   spm_pkg 'STTextView',
+>     :url => 'https://github.com/krzyzanowskim/STTextView.git',
+>     :version => '2.3.10',
+>     :products => ['STTextView']
+>
+>   # …
+> end
+> ```
 
 ## Working example
 
-See [`example/ios-app/`](../example/ios-app/) for a complete working setup.
+See [`example/ios-app/`](../example/ios-app/) for a complete working Expo SDK 55 setup.

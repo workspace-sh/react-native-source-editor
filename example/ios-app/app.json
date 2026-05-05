@@ -16,6 +16,7 @@
       "bundleIdentifier": "sh.workspace.sourceeditor.example"
     },
     "plugins": [
+      "@workspace-sh/react-native-source-editor",
       [
         "expo-build-properties",
         {

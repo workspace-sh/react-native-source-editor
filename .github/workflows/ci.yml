@@ -65,6 +65,9 @@ jobs:
       - name: Install example deps
         run: cd example/ios-app && npm ci
 
+      - name: Expo prebuild (CNG — generates ios/ via our config plugin)
+        run: cd example/ios-app && npx expo prebuild --no-install --platform ios
+
       - name: Pod install (Expo wrapper)
         run: cd example/ios-app && npx pod-install
 

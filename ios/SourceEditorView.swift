@@ -15,6 +15,13 @@ class SourceEditorView: ExpoView {
     super.init(appContext: appContext)
     clipsToBounds = true
 
+    textView.isScrollEnabled = true
+    textView.alwaysBounceVertical = true
+    // We control insets explicitly via textContainerInset (set from JS via
+    // the `contentInsets` prop). Disable UIScrollView's safe-area adjustment
+    // so it doesn't compound with ours.
+    textView.contentInsetAdjustmentBehavior = .never
+
     let delegate = TextDelegate(
       onChange: { [weak self] text in
         self?.onChangeText(["text": text])
@@ -74,6 +81,15 @@ class SourceEditorView: ExpoView {
     }
     textView.backgroundColor = .systemBackground
     textView.textColor = .label
+  }
+
+  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+    textView.textContainerInset = UIEdgeInsets(
+      top: CGFloat(top),
+      left: CGFloat(left),
+      bottom: CGFloat(bottom),
+      right: CGFloat(right)
+    )
   }
 }
 
@@ -178,6 +194,15 @@ class SourceEditorView: ExpoView {
     }
     textView.backgroundColor = .textBackgroundColor
     textView.textColor = .textColor
+  }
+
+  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+    scrollView.contentInsets = NSEdgeInsets(
+      top: CGFloat(top),
+      left: CGFloat(left),
+      bottom: CGFloat(bottom),
+      right: CGFloat(right)
+    )
   }
 }
 
