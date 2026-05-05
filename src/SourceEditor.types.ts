@@ -23,7 +23,8 @@ export type Language =
   | 'markdown'
   | 'json'
   | 'javascript'
-  | 'typescript';
+  | 'typescript'
+  | 'html';
 
 export type ContentInsets = {
   top?: number;

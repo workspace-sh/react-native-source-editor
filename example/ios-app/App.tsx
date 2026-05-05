@@ -94,6 +94,50 @@ const VERSION: number = 1.0;
 const ENABLED: boolean = true;
 const LANGUAGES: Language[] = ['markdown', 'json', 'javascript'];
 `,
+  html: `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, system-ui;
+    padding: 24px;
+    background: light-dark(#fff, #000);
+    color: light-dark(#000, #fff);
+  }
+  h1 { color: light-dark(#007aff, #0a84ff); }
+  .badge {
+    display: inline-block;
+    background: rgba(0, 122, 255, 0.15);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75em;
+    vertical-align: middle;
+  }
+  button {
+    margin-top: 12px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: light-dark(#007aff, #0a84ff);
+    color: white;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+  <h1>SourceEditor <span class="badge">demo</span></h1>
+  <p>HTML, CSS and JS — all highlighted in source, all rendered in preview.</p>
+  <button id="hello">Tap me</button>
+  <script>
+    document.getElementById('hello').addEventListener('click', () => {
+      alert('Hello from the HTML preview!');
+    });
+  </script>
+</body>
+</html>
+`,
 };
 
 const LANGUAGE_LABEL: Record<DemoLanguage, string> = {
@@ -101,6 +145,7 @@ const LANGUAGE_LABEL: Record<DemoLanguage, string> = {
   json: 'JSON',
   javascript: 'JavaScript',
   typescript: 'TypeScript',
+  html: 'HTML',
 };
 
 export default function App() {
@@ -120,19 +165,21 @@ function Demo() {
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
 
-  const isMarkdown = language === 'markdown';
-  const showPreview = isMarkdown && viewMode === 'preview';
+  const isPreviewable = language === 'markdown' || language === 'html';
+  const showPreview = isPreviewable && viewMode === 'preview';
 
   const html = useMemo(() => {
     if (!showPreview) return '';
+    if (language === 'html') return content;
+    // markdown
     const body = marked.parse(content, { async: false }) as string;
     return wrapMarkdownHTML(body, insets.top, bottomBarHeight);
-  }, [showPreview, content, insets.top, bottomBarHeight]);
+  }, [showPreview, language, content, insets.top, bottomBarHeight]);
 
   const onLanguageChange = (lang: DemoLanguage) => {
     setLanguage(lang);
     setContent(SAMPLES[lang]);
-    if (lang !== 'markdown') {
+    if (lang !== 'markdown' && lang !== 'html') {
       setViewMode('source');
     }
   };
@@ -235,9 +282,10 @@ function Demo() {
                 <Text modifiers={[tag('typescript')]}>
                   {LANGUAGE_LABEL.typescript}
                 </Text>
+                <Text modifiers={[tag('html')]}>{LANGUAGE_LABEL.html}</Text>
               </Picker>
 
-              {isMarkdown && (
+              {isPreviewable && (
                 <Picker
                   modifiers={[
                     pickerStyle('segmented'),
