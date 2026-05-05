@@ -35,6 +35,7 @@ export default function Editor() {
 | `editable` | `boolean` | `true` | Disables editing when `false`. |
 | `font` | `{ family?: string; size?: number }` | system mono @ 14 | Falls back to monospaced system font if `family` is missing or unresolvable. |
 | `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | `auto` follows system appearance. |
+| `contentInsets` | `{ top?, bottom?, left?, right? }` (numbers) | `0` | Padding inside the text container. Use to keep first/last lines clear of floating UI like translucent headers/footers. |
 | `onChangeText` | `(text: string) => void` | — | Fires on every text change. |
 | `onSelectionChange` | `(selection: { start: number; end: number }) => void` | — | Fires on selection updates. |
 | `style` | `StyleProp<ViewStyle>` | — | Standard RN style. |
