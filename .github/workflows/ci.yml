@@ -31,10 +31,19 @@ jobs:
 
   build-ios:
     name: Build (iOS, Expo CNG)
-    runs-on: macos-latest
+    runs-on: macos-15
     needs: typecheck
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        # Expo SDK 55's modules-core uses Swift 6.1 features (e.g. new
+        # @MainActor forms). The default Xcode on GitHub runners (16.4 /
+        # Swift 6.0) errors with "unknown attribute 'MainActor'" — pin
+        # to the newest Xcode the runner image ships.
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - uses: actions/setup-node@v4
         with:
