@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   StyleSheet,
@@ -12,7 +12,7 @@ import {
   GlassView,
   isLiquidGlassAvailable,
 } from 'expo-glass-effect';
-import { Button, Host, Picker, Text } from '@expo/ui/swift-ui';
+import { Host, Picker, Text } from '@expo/ui/swift-ui';
 import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import { WebView } from 'react-native-webview';
 import { marked } from 'marked';
@@ -90,10 +90,10 @@ const LANGUAGES: Language[] = ['markdown', 'json', 'javascript'];
 };
 
 const LANGUAGE_LABEL: Record<DemoLanguage, string> = {
-  markdown: 'MD',
+  markdown: 'Markdown',
   json: 'JSON',
-  javascript: 'JS',
-  typescript: 'TS',
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
 };
 
 export default function App() {
@@ -133,6 +133,14 @@ function Demo() {
   const onBottomLayout = (e: LayoutChangeEvent) => {
     setBottomBarHeight(e.nativeEvent.layout.height);
   };
+
+  // Auto-focus the editor (and surface the keyboard) whenever we're showing
+  // it, so the user can start typing without an explicit Focus button.
+  useEffect(() => {
+    if (showPreview) return;
+    const t = setTimeout(() => editorRef.current?.focus(), 120);
+    return () => clearTimeout(t);
+  }, [showPreview, language]);
 
   return (
     <View style={styles.container}>
@@ -175,19 +183,17 @@ function Demo() {
         onLayout={onBottomLayout}
         pointerEvents="box-none"
       >
-        <Pill glassAvailable={glassAvailable}>
-          <Host matchContents>
+        <Pill glassAvailable={glassAvailable} fixedWidth={LANGUAGE_PILL_WIDTH}>
+          <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
             <Picker
               modifiers={[pickerStyle('menu')]}
-              label={LANGUAGE_LABEL[language]}
-              systemImage="chevron.up.chevron.down"
               selection={language}
               onSelectionChange={(value) => onLanguageChange(value as DemoLanguage)}
             >
-              <Text modifiers={[tag('markdown')]}>Markdown</Text>
-              <Text modifiers={[tag('json')]}>JSON</Text>
-              <Text modifiers={[tag('javascript')]}>JavaScript</Text>
-              <Text modifiers={[tag('typescript')]}>TypeScript</Text>
+              <Text modifiers={[tag('markdown')]}>{LANGUAGE_LABEL.markdown}</Text>
+              <Text modifiers={[tag('json')]}>{LANGUAGE_LABEL.json}</Text>
+              <Text modifiers={[tag('javascript')]}>{LANGUAGE_LABEL.javascript}</Text>
+              <Text modifiers={[tag('typescript')]}>{LANGUAGE_LABEL.typescript}</Text>
             </Picker>
           </Host>
         </Pill>
@@ -206,18 +212,6 @@ function Demo() {
             </Host>
           </Pill>
         )}
-
-        {!showPreview && (
-          <Pill glassAvailable={glassAvailable}>
-            <Host matchContents>
-              <Button
-                label="Focus"
-                systemImage="cursorarrow"
-                onPress={() => editorRef.current?.focus()}
-              />
-            </Host>
-          </Pill>
-        )}
       </View>
     </View>
   );
@@ -226,13 +220,19 @@ function Demo() {
 function Pill({
   glassAvailable,
   stretch = false,
+  fixedWidth,
   children,
 }: {
   glassAvailable: boolean;
   stretch?: boolean;
+  fixedWidth?: number;
   children: React.ReactNode;
 }) {
-  const sizing = stretch ? styles.pillStretch : styles.pillIntrinsic;
+  const sizing = stretch
+    ? styles.pillStretch
+    : fixedWidth != null
+      ? { width: fixedWidth }
+      : styles.pillIntrinsic;
 
   if (glassAvailable) {
     return (
@@ -296,6 +296,7 @@ function wrapMarkdownHTML(
 }
 
 const PILL_HEIGHT = 44;
+const LANGUAGE_PILL_WIDTH = 140;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
