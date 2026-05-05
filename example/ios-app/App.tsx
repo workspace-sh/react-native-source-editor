@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   type ColorSchemeName,
   type LayoutChangeEvent,
@@ -23,23 +23,80 @@ import {
   Text,
 } from '@expo/ui/swift-ui';
 import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
+import { WebView } from 'react-native-webview';
+import { marked } from 'marked';
 import SourceEditor, {
+  type Language,
   type SourceEditorRef,
 } from '@workspace-sh/react-native-source-editor';
 
-const INITIAL = `# SourceEditor demo
+type DemoLanguage = Exclude<Language, 'plaintext'>;
+type ViewMode = 'source' | 'preview';
 
-Edit on Source, switch to Preview to see read-only mode + larger font + light theme.
+const SAMPLES: Record<DemoLanguage, string> = {
+  markdown: `# SourceEditor
 
-- [x] iOS wrapper (#3)
-- [x] macOS wrapper (#4)
-- [x] JS API (#5)
-- [x] Font + theme (#6)
-- [x] iOS example (#7)
-- [ ] CI (#8)
-`;
+Native source editor for **React Native**, wrapping [STTextView](https://github.com/krzyzanowskim/STTextView).
 
-type Mode = 'source' | 'preview';
+- iOS via *UIKit*
+- macOS via *AppKit*
+
+Inline \`code\` looks like this. Switch to **Preview** to see the rendered Markdown.
+
+## Tokens
+
+- Headings (\`#\`, \`##\`, …)
+- **Bold**, *italic*
+- Inline \`code\`
+- [Links](https://example.com)
+`,
+  json: `{
+  "name": "@workspace-sh/react-native-source-editor",
+  "version": "0.0.1",
+  "private": true,
+  "platforms": ["ios", "macos"],
+  "ios": {
+    "deploymentTarget": 16.0,
+    "useFrameworks": "static"
+  },
+  "experimental": null,
+  "stable": true,
+  "downloads": 0
+}
+`,
+  javascript: `import SourceEditor from '@workspace-sh/react-native-source-editor';
+
+// Render the editor in a controlled component.
+function Editor({ initial }) {
+  const [text, setText] = useState(initial);
+
+  return (
+    <SourceEditor
+      value={text}
+      editable
+      language="markdown"
+      onChangeText={setText}
+    />
+  );
+}
+
+const VERSION = 1.0;
+`,
+  typescript: `import SourceEditor, {
+  type SourceEditorProps,
+  type SourceEditorRef,
+  type Language,
+} from '@workspace-sh/react-native-source-editor';
+
+interface EditorProps extends SourceEditorProps {
+  initial: string;
+}
+
+const VERSION: number = 1.0;
+const ENABLED: boolean = true;
+const LANGUAGES: Language[] = ['markdown', 'json', 'javascript'];
+`,
+};
 
 export default function App() {
   return (
@@ -50,28 +107,56 @@ export default function App() {
 }
 
 function Demo() {
-  const [mode, setMode] = useState<Mode>('source');
-  const [content, setContent] = useState(INITIAL);
+  const [language, setLanguage] = useState<DemoLanguage>('markdown');
+  const [viewMode, setViewMode] = useState<ViewMode>('source');
+  const [content, setContent] = useState(SAMPLES.markdown);
   const [topBarHeight, setTopBarHeight] = useState(0);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const glassAvailable = isLiquidGlassAvailable();
-  const isPreview = mode === 'preview';
+
+  const isMarkdown = language === 'markdown';
+  const showPreview = isMarkdown && viewMode === 'preview';
+
+  const html = useMemo(() => {
+    if (!showPreview) return '';
+    const body = marked.parse(content, { async: false }) as string;
+    return wrapMarkdownHTML(body, scheme === 'dark', topBarHeight, bottomBarHeight);
+  }, [showPreview, content, scheme, topBarHeight, bottomBarHeight]);
+
+  const onLanguageChange = (lang: DemoLanguage) => {
+    setLanguage(lang);
+    setContent(SAMPLES[lang]);
+    if (lang !== 'markdown') {
+      setViewMode('source');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <SourceEditor
-        ref={editorRef}
-        value={content}
-        editable={!isPreview}
-        font={{ size: isPreview ? 16 : 13 }}
-        theme={isPreview ? 'light' : 'auto'}
-        contentInsets={{ top: topBarHeight + 8, bottom: bottomBarHeight + 8 }}
-        onChangeText={setContent}
-        style={styles.editor}
-      />
+      {showPreview ? (
+        <WebView
+          originWhitelist={['*']}
+          source={{ html }}
+          style={styles.preview}
+          contentInsetAdjustmentBehavior="never"
+          scrollEnabled
+        />
+      ) : (
+        <SourceEditor
+          ref={editorRef}
+          value={content}
+          editable
+          language={language}
+          font={{ size: 13 }}
+          theme="auto"
+          contentInsets={{ top: topBarHeight + 8, bottom: bottomBarHeight + 8 }}
+          onChangeText={setContent}
+          style={styles.editor}
+        />
+      )}
 
       <FloatingBar
         position="top"
@@ -84,11 +169,13 @@ function Demo() {
           <Host matchContents>
             <Picker
               modifiers={[pickerStyle('segmented')]}
-              selection={mode}
-              onSelectionChange={(value) => setMode(value as Mode)}
+              selection={language}
+              onSelectionChange={(value) => onLanguageChange(value as DemoLanguage)}
             >
-              <Text modifiers={[tag('source')]}>Source</Text>
-              <Text modifiers={[tag('preview')]}>Preview</Text>
+              <Text modifiers={[tag('markdown')]}>MD</Text>
+              <Text modifiers={[tag('json')]}>JSON</Text>
+              <Text modifiers={[tag('javascript')]}>JS</Text>
+              <Text modifiers={[tag('typescript')]}>TS</Text>
             </Picker>
           </Host>
         </View>
@@ -103,13 +190,25 @@ function Demo() {
       >
         <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
           <HStack spacing={12}>
-            <Text>{`${content.length} chars · ${mode}`}</Text>
+            {isMarkdown ? (
+              <Button
+                label={viewMode === 'source' ? 'Preview' : 'Source'}
+                systemImage={viewMode === 'source' ? 'eye' : 'pencil'}
+                onPress={() =>
+                  setViewMode(viewMode === 'source' ? 'preview' : 'source')
+                }
+              />
+            ) : (
+              <Text>{`${content.length} chars · ${language}`}</Text>
+            )}
             <Spacer />
-            <Button
-              label="Focus"
-              systemImage="cursorarrow"
-              onPress={() => editorRef.current?.focus()}
-            />
+            {!showPreview && (
+              <Button
+                label="Focus"
+                systemImage="cursorarrow"
+                onPress={() => editorRef.current?.focus()}
+              />
+            )}
           </HStack>
         </Host>
       </FloatingBar>
@@ -134,8 +233,6 @@ function FloatingBar({
   onLayout?: (event: LayoutChangeEvent) => void;
   children: React.ReactNode;
 }) {
-  // Honour all four safe-area edges so landscape (notch on side) and
-  // portrait (notch on top) both keep content clear of the cutout.
   const padding = {
     paddingTop: position === 'top' ? insets.top + 8 : 12,
     paddingBottom: position === 'bottom' ? insets.bottom + 8 : 12,
@@ -173,9 +270,63 @@ function FloatingBar({
   );
 }
 
+function wrapMarkdownHTML(
+  body: string,
+  isDark: boolean,
+  topInset: number,
+  bottomInset: number
+): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: light dark; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: -apple-system-body;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui;
+    line-height: 1.55;
+    padding: ${topInset + 16}px 20px ${bottomInset + 16}px;
+    background: ${isDark ? '#000' : '#fff'};
+    color: ${isDark ? '#fff' : '#000'};
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, h4 { color: ${isDark ? '#0a84ff' : '#007aff'}; margin-top: 1.4em; }
+  h1 { font-size: 1.7em; }
+  h2 { font-size: 1.35em; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: ${isDark ? '#1c1c1e' : '#f0f0f3'};
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: ${isDark ? '#1c1c1e' : '#f5f5f7'};
+    padding: 14px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  pre code { background: transparent; padding: 0; }
+  a { color: ${isDark ? '#0a84ff' : '#007aff'}; text-decoration: none; }
+  ul, ol { padding-left: 1.4em; }
+  blockquote {
+    border-left: 3px solid ${isDark ? '#3a3a3c' : '#d1d1d6'};
+    padding-left: 12px;
+    margin-left: 0;
+    color: ${isDark ? '#a1a1a6' : '#6e6e73'};
+  }
+</style>
+</head>
+<body>${body}</body>
+</html>`;
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   editor: { flex: 1 },
+  preview: { flex: 1, backgroundColor: 'transparent' },
   bar: {
     position: 'absolute',
   },

@@ -15,6 +15,7 @@ const SourceEditor = React.forwardRef<SourceEditorRef, SourceEditorProps>(
       editable = true,
       font,
       theme = 'auto',
+      language = 'plaintext',
       contentInsets,
       onChangeText,
       onSelectionChange,
@@ -52,6 +53,7 @@ const SourceEditor = React.forwardRef<SourceEditorRef, SourceEditorProps>(
         editable={editable}
         font={font}
         theme={theme}
+        language={language}
         contentInsets={contentInsets}
         style={style}
         onChangeText={(event) => {

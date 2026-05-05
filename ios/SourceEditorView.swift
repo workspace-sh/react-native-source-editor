@@ -10,6 +10,8 @@ class SourceEditorView: ExpoView {
   let onSelectionChange = EventDispatcher()
 
   private var textDelegate: TextDelegate?
+  private var currentLanguage: HighlightLanguage = .plaintext
+  private var isReHighlighting = false
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -31,6 +33,9 @@ class SourceEditorView: ExpoView {
           "start": range.location,
           "end": range.location + range.length
         ])
+      },
+      onTextChanged: { [weak self] in
+        self?.reHighlight()
       }
     )
     textDelegate = delegate
@@ -46,6 +51,7 @@ class SourceEditorView: ExpoView {
   func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
+      reHighlight()
     }
   }
 
@@ -68,6 +74,7 @@ class SourceEditorView: ExpoView {
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
     }
+    reHighlight()
   }
 
   func setTheme(_ theme: String) {
@@ -91,20 +98,50 @@ class SourceEditorView: ExpoView {
       right: CGFloat(right)
     )
   }
+
+  func setLanguage(_ value: String) {
+    currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
+    reHighlight()
+  }
+
+  private func reHighlight() {
+    guard !isReHighlighting else { return }
+    isReHighlighting = true
+    defer { isReHighlighting = false }
+
+    let text = textView.text ?? ""
+    let attrString = NSMutableAttributedString(string: text)
+    Highlighter(
+      language: currentLanguage,
+      theme: .system,
+      baseFont: textView.font
+    ).apply(to: attrString)
+
+    let savedSelection = textView.textSelection
+    textView.attributedText = attrString
+    textView.textSelection = savedSelection
+  }
 }
 
 private class TextDelegate: NSObject, STTextViewDelegate {
   let onChange: (String) -> Void
   let onSelection: (NSRange) -> Void
+  let onTextChanged: () -> Void
 
-  init(onChange: @escaping (String) -> Void, onSelection: @escaping (NSRange) -> Void) {
+  init(
+    onChange: @escaping (String) -> Void,
+    onSelection: @escaping (NSRange) -> Void,
+    onTextChanged: @escaping () -> Void
+  ) {
     self.onChange = onChange
     self.onSelection = onSelection
+    self.onTextChanged = onTextChanged
   }
 
   func textViewDidChangeText(_ notification: Notification) {
     guard let textView = notification.object as? STTextView else { return }
     onChange(textView.text ?? "")
+    onTextChanged()
   }
 
   func textViewDidChangeSelection(_ notification: Notification) {
@@ -123,6 +160,8 @@ class SourceEditorView: ExpoView {
   let onSelectionChange = EventDispatcher()
 
   private var textDelegate: TextDelegate?
+  private var currentLanguage: HighlightLanguage = .plaintext
+  private var isReHighlighting = false
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -138,6 +177,9 @@ class SourceEditorView: ExpoView {
           "start": range.location,
           "end": range.location + range.length
         ])
+      },
+      onTextChanged: { [weak self] in
+        self?.reHighlight()
       }
     )
     textDelegate = delegate
@@ -157,6 +199,7 @@ class SourceEditorView: ExpoView {
   func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
+      reHighlight()
     }
   }
 
@@ -181,6 +224,7 @@ class SourceEditorView: ExpoView {
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
     }
+    reHighlight()
   }
 
   func setTheme(_ theme: String) {
@@ -204,20 +248,50 @@ class SourceEditorView: ExpoView {
       right: CGFloat(right)
     )
   }
+
+  func setLanguage(_ value: String) {
+    currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
+    reHighlight()
+  }
+
+  private func reHighlight() {
+    guard !isReHighlighting else { return }
+    isReHighlighting = true
+    defer { isReHighlighting = false }
+
+    let text = textView.text ?? ""
+    let attrString = NSMutableAttributedString(string: text)
+    Highlighter(
+      language: currentLanguage,
+      theme: .system,
+      baseFont: textView.font
+    ).apply(to: attrString)
+
+    let savedSelection = textView.textSelection
+    textView.attributedText = attrString
+    textView.textSelection = savedSelection
+  }
 }
 
 private class TextDelegate: NSObject, STTextViewDelegate {
   let onChange: (String) -> Void
   let onSelection: (NSRange) -> Void
+  let onTextChanged: () -> Void
 
-  init(onChange: @escaping (String) -> Void, onSelection: @escaping (NSRange) -> Void) {
+  init(
+    onChange: @escaping (String) -> Void,
+    onSelection: @escaping (NSRange) -> Void,
+    onTextChanged: @escaping () -> Void
+  ) {
     self.onChange = onChange
     self.onSelection = onSelection
+    self.onTextChanged = onTextChanged
   }
 
   func textViewDidChangeText(_ notification: Notification) {
     guard let textView = notification.object as? STTextView else { return }
     onChange(textView.text ?? "")
+    onTextChanged()
   }
 
   func textViewDidChangeSelection(_ notification: Notification) {

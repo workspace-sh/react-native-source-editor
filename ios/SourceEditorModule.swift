@@ -54,6 +54,12 @@ public class SourceEditorModule: Module {
         #endif
       }
 
+      Prop("language") { (view: SourceEditorView, value: String) in
+        #if os(iOS) || os(macOS)
+        view.setLanguage(value)
+        #endif
+      }
+
       AsyncFunction("focus") { (view: SourceEditorView) in
         #if os(iOS) || os(macOS)
         view.focusEditor()

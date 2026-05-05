@@ -18,6 +18,13 @@ export type FontConfig = {
 
 export type Theme = 'light' | 'dark' | 'auto';
 
+export type Language =
+  | 'plaintext'
+  | 'markdown'
+  | 'json'
+  | 'javascript'
+  | 'typescript';
+
 export type ContentInsets = {
   top?: number;
   bottom?: number;
@@ -30,6 +37,7 @@ export type SourceEditorViewProps = {
   editable?: boolean;
   font?: FontConfig;
   theme?: Theme;
+  language?: Language;
   contentInsets?: ContentInsets;
   onChangeText?: (event: { nativeEvent: ChangeTextEventPayload }) => void;
   onSelectionChange?: (event: { nativeEvent: SelectionChangeEventPayload }) => void;
@@ -42,6 +50,7 @@ export type SourceEditorProps = {
   editable?: boolean;
   font?: FontConfig;
   theme?: Theme;
+  language?: Language;
   contentInsets?: ContentInsets;
   onChangeText?: (text: string) => void;
   onSelectionChange?: (selection: Selection) => void;
