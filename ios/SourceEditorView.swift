@@ -75,6 +75,15 @@ class SourceEditorView: ExpoView {
     textView.backgroundColor = .systemBackground
     textView.textColor = .label
   }
+
+  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+    textView.textContainerInset = UIEdgeInsets(
+      top: CGFloat(top),
+      left: CGFloat(left),
+      bottom: CGFloat(bottom),
+      right: CGFloat(right)
+    )
+  }
 }
 
 private class TextDelegate: NSObject, STTextViewDelegate {
@@ -178,6 +187,15 @@ class SourceEditorView: ExpoView {
     }
     textView.backgroundColor = .textBackgroundColor
     textView.textColor = .textColor
+  }
+
+  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+    scrollView.contentInsets = NSEdgeInsets(
+      top: CGFloat(top),
+      left: CGFloat(left),
+      bottom: CGFloat(bottom),
+      right: CGFloat(right)
+    )
   }
 }
 

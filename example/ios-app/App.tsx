@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import {
   type ColorSchemeName,
+  type LayoutChangeEvent,
   StyleSheet,
   View,
   useColorScheme,
@@ -51,6 +52,8 @@ export default function App() {
 function Demo() {
   const [mode, setMode] = useState<Mode>('source');
   const [content, setContent] = useState(INITIAL);
+  const [topBarHeight, setTopBarHeight] = useState(0);
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
@@ -65,6 +68,7 @@ function Demo() {
         editable={!isPreview}
         font={{ size: isPreview ? 16 : 13 }}
         theme={isPreview ? 'light' : 'auto'}
+        contentInsets={{ top: topBarHeight + 8, bottom: bottomBarHeight + 8 }}
         onChangeText={setContent}
         style={styles.editor}
       />
@@ -74,6 +78,7 @@ function Demo() {
         inset={insets.top}
         glassAvailable={glassAvailable}
         scheme={scheme}
+        onLayout={(e) => setTopBarHeight(e.nativeEvent.layout.height)}
       >
         <Host matchContents style={styles.host}>
           <Picker
@@ -92,6 +97,7 @@ function Demo() {
         inset={insets.bottom}
         glassAvailable={glassAvailable}
         scheme={scheme}
+        onLayout={(e) => setBottomBarHeight(e.nativeEvent.layout.height)}
       >
         <Host matchContents style={styles.host}>
           <HStack spacing={12}>
@@ -114,12 +120,14 @@ function FloatingBar({
   inset,
   glassAvailable,
   scheme,
+  onLayout,
   children,
 }: {
   position: 'top' | 'bottom';
   inset: number;
   glassAvailable: boolean;
   scheme: ColorSchemeName;
+  onLayout?: (event: LayoutChangeEvent) => void;
   children: React.ReactNode;
 }) {
   const padding = {
@@ -136,6 +144,7 @@ function FloatingBar({
       <GlassView
         style={[styles.bar, positional, padding]}
         glassEffectStyle="regular"
+        onLayout={onLayout}
       >
         {children}
       </GlassView>
@@ -149,6 +158,7 @@ function FloatingBar({
         padding,
         scheme === 'dark' ? styles.barFallbackDark : styles.barFallbackLight,
       ]}
+      onLayout={onLayout}
     >
       {children}
     </View>
