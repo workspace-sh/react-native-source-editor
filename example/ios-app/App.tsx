@@ -1,10 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  type ColorSchemeName,
   type LayoutChangeEvent,
   StyleSheet,
   View,
-  useColorScheme,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -14,14 +12,7 @@ import {
   GlassView,
   isLiquidGlassAvailable,
 } from 'expo-glass-effect';
-import {
-  Button,
-  HStack,
-  Host,
-  Picker,
-  Spacer,
-  Text,
-} from '@expo/ui/swift-ui';
+import { Button, Host, Picker, Text } from '@expo/ui/swift-ui';
 import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
 import { WebView } from 'react-native-webview';
 import { marked } from 'marked';
@@ -98,6 +89,13 @@ const LANGUAGES: Language[] = ['markdown', 'json', 'javascript'];
 `,
 };
 
+const LANGUAGE_LABEL: Record<DemoLanguage, string> = {
+  markdown: 'MD',
+  json: 'JSON',
+  javascript: 'JS',
+  typescript: 'TS',
+};
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -110,11 +108,9 @@ function Demo() {
   const [language, setLanguage] = useState<DemoLanguage>('markdown');
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [content, setContent] = useState(SAMPLES.markdown);
-  const [topBarHeight, setTopBarHeight] = useState(0);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
-  const scheme = useColorScheme();
   const glassAvailable = isLiquidGlassAvailable();
 
   const isMarkdown = language === 'markdown';
@@ -123,8 +119,8 @@ function Demo() {
   const html = useMemo(() => {
     if (!showPreview) return '';
     const body = marked.parse(content, { async: false }) as string;
-    return wrapMarkdownHTML(body, scheme === 'dark', topBarHeight, bottomBarHeight);
-  }, [showPreview, content, scheme, topBarHeight, bottomBarHeight]);
+    return wrapMarkdownHTML(body, insets.top, bottomBarHeight);
+  }, [showPreview, content, insets.top, bottomBarHeight]);
 
   const onLanguageChange = (lang: DemoLanguage) => {
     setLanguage(lang);
@@ -132,6 +128,10 @@ function Demo() {
     if (lang !== 'markdown') {
       setViewMode('source');
     }
+  };
+
+  const onBottomLayout = (e: LayoutChangeEvent) => {
+    setBottomBarHeight(e.nativeEvent.layout.height);
   };
 
   return (
@@ -152,127 +152,100 @@ function Demo() {
           language={language}
           font={{ size: 13 }}
           theme="auto"
-          contentInsets={{ top: topBarHeight + 8, bottom: bottomBarHeight + 8 }}
+          contentInsets={{
+            top: insets.top + 12,
+            bottom: bottomBarHeight + 16,
+            left: Math.max(8, insets.left),
+            right: Math.max(8, insets.right),
+          }}
           onChangeText={setContent}
           style={styles.editor}
         />
       )}
 
-      <FloatingBar
-        position="top"
-        insets={insets}
-        glassAvailable={glassAvailable}
-        scheme={scheme}
-        onLayout={(e) => setTopBarHeight(e.nativeEvent.layout.height)}
+      <View
+        style={[
+          styles.bottomRow,
+          {
+            paddingBottom: insets.bottom + 8,
+            paddingLeft: Math.max(16, insets.left),
+            paddingRight: Math.max(16, insets.right),
+          },
+        ]}
+        onLayout={onBottomLayout}
+        pointerEvents="box-none"
       >
-        <View style={styles.toggleRow}>
+        <Pill glassAvailable={glassAvailable}>
           <Host matchContents>
             <Picker
-              modifiers={[pickerStyle('segmented')]}
+              modifiers={[pickerStyle('menu')]}
+              label={LANGUAGE_LABEL[language]}
+              systemImage="chevron.up.chevron.down"
               selection={language}
               onSelectionChange={(value) => onLanguageChange(value as DemoLanguage)}
             >
-              <Text modifiers={[tag('markdown')]}>MD</Text>
+              <Text modifiers={[tag('markdown')]}>Markdown</Text>
               <Text modifiers={[tag('json')]}>JSON</Text>
-              <Text modifiers={[tag('javascript')]}>JS</Text>
-              <Text modifiers={[tag('typescript')]}>TS</Text>
+              <Text modifiers={[tag('javascript')]}>JavaScript</Text>
+              <Text modifiers={[tag('typescript')]}>TypeScript</Text>
             </Picker>
           </Host>
-        </View>
-      </FloatingBar>
+        </Pill>
 
-      <FloatingBar
-        position="bottom"
-        insets={insets}
-        glassAvailable={glassAvailable}
-        scheme={scheme}
-        onLayout={(e) => setBottomBarHeight(e.nativeEvent.layout.height)}
-      >
-        <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
-          <HStack spacing={12}>
-            {isMarkdown ? (
-              <Button
-                label={viewMode === 'source' ? 'Preview' : 'Source'}
-                systemImage={viewMode === 'source' ? 'eye' : 'pencil'}
-                onPress={() =>
-                  setViewMode(viewMode === 'source' ? 'preview' : 'source')
-                }
-              />
-            ) : (
-              <Text>{`${content.length} chars · ${language}`}</Text>
-            )}
-            <Spacer />
-            {!showPreview && (
+        {isMarkdown && (
+          <Pill glassAvailable={glassAvailable} stretch>
+            <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
+              <Picker
+                modifiers={[pickerStyle('segmented')]}
+                selection={viewMode}
+                onSelectionChange={(value) => setViewMode(value as ViewMode)}
+              >
+                <Text modifiers={[tag('source')]}>Source</Text>
+                <Text modifiers={[tag('preview')]}>Preview</Text>
+              </Picker>
+            </Host>
+          </Pill>
+        )}
+
+        {!showPreview && (
+          <Pill glassAvailable={glassAvailable}>
+            <Host matchContents>
               <Button
                 label="Focus"
                 systemImage="cursorarrow"
                 onPress={() => editorRef.current?.focus()}
               />
-            )}
-          </HStack>
-        </Host>
-      </FloatingBar>
+            </Host>
+          </Pill>
+        )}
+      </View>
     </View>
   );
 }
 
-type Insets = { top: number; bottom: number; left: number; right: number };
-
-function FloatingBar({
-  position,
-  insets,
+function Pill({
   glassAvailable,
-  scheme,
-  onLayout,
+  stretch = false,
   children,
 }: {
-  position: 'top' | 'bottom';
-  insets: Insets;
   glassAvailable: boolean;
-  scheme: ColorSchemeName;
-  onLayout?: (event: LayoutChangeEvent) => void;
+  stretch?: boolean;
   children: React.ReactNode;
 }) {
-  const padding = {
-    paddingTop: position === 'top' ? insets.top + 8 : 12,
-    paddingBottom: position === 'bottom' ? insets.bottom + 8 : 12,
-    paddingLeft: Math.max(16, insets.left),
-    paddingRight: Math.max(16, insets.right),
-  };
-  const positional =
-    position === 'top'
-      ? { top: 0, left: 0, right: 0 }
-      : { bottom: 0, left: 0, right: 0 };
+  const sizing = stretch ? styles.pillStretch : styles.pillIntrinsic;
 
   if (glassAvailable) {
     return (
-      <GlassView
-        style={[styles.bar, positional, padding]}
-        glassEffectStyle="regular"
-        onLayout={onLayout}
-      >
+      <GlassView style={[styles.pill, sizing]} glassEffectStyle="regular">
         {children}
       </GlassView>
     );
   }
-  return (
-    <View
-      style={[
-        styles.bar,
-        positional,
-        padding,
-        scheme === 'dark' ? styles.barFallbackDark : styles.barFallbackLight,
-      ]}
-      onLayout={onLayout}
-    >
-      {children}
-    </View>
-  );
+  return <View style={[styles.pill, sizing, styles.pillFallback]}>{children}</View>;
 }
 
 function wrapMarkdownHTML(
   body: string,
-  isDark: boolean,
   topInset: number,
   bottomInset: number
 ): string {
@@ -284,38 +257,37 @@ function wrapMarkdownHTML(
   :root { color-scheme: light dark; }
   html, body { margin: 0; padding: 0; }
   body {
-    font: -apple-system-body;
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui;
     line-height: 1.55;
     padding: ${topInset + 16}px 20px ${bottomInset + 16}px;
-    background: ${isDark ? '#000' : '#fff'};
-    color: ${isDark ? '#fff' : '#000'};
+    background: light-dark(#fff, #000);
+    color: light-dark(#000, #fff);
     -webkit-text-size-adjust: 100%;
   }
-  h1, h2, h3, h4 { color: ${isDark ? '#0a84ff' : '#007aff'}; margin-top: 1.4em; }
+  h1, h2, h3, h4 { color: light-dark(#007aff, #0a84ff); margin-top: 1.4em; }
   h1 { font-size: 1.7em; }
   h2 { font-size: 1.35em; }
   code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    background: ${isDark ? '#1c1c1e' : '#f0f0f3'};
+    background: light-dark(#f0f0f3, #1c1c1e);
     padding: 2px 5px;
     border-radius: 4px;
     font-size: 0.9em;
   }
   pre {
-    background: ${isDark ? '#1c1c1e' : '#f5f5f7'};
+    background: light-dark(#f5f5f7, #1c1c1e);
     padding: 14px;
     border-radius: 8px;
     overflow-x: auto;
   }
   pre code { background: transparent; padding: 0; }
-  a { color: ${isDark ? '#0a84ff' : '#007aff'}; text-decoration: none; }
+  a { color: light-dark(#007aff, #0a84ff); text-decoration: none; }
   ul, ol { padding-left: 1.4em; }
   blockquote {
-    border-left: 3px solid ${isDark ? '#3a3a3c' : '#d1d1d6'};
+    border-left: 3px solid light-dark(#d1d1d6, #3a3a3c);
     padding-left: 12px;
     margin-left: 0;
-    color: ${isDark ? '#a1a1a6' : '#6e6e73'};
+    color: light-dark(#6e6e73, #a1a1a6);
   }
 </style>
 </head>
@@ -323,22 +295,38 @@ function wrapMarkdownHTML(
 </html>`;
 }
 
+const PILL_HEIGHT = 44;
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   editor: { flex: 1 },
   preview: { flex: 1, backgroundColor: 'transparent' },
-  bar: {
+  bottomRow: {
     position: 'absolute',
-  },
-  barFallbackLight: {
-    backgroundColor: 'rgba(255,255,255,0.85)',
-  },
-  barFallbackDark: {
-    backgroundColor: 'rgba(20,20,20,0.85)',
-  },
-  toggleRow: {
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 8,
+  },
+  pill: {
+    height: PILL_HEIGHT,
+    borderRadius: PILL_HEIGHT / 2,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
     justifyContent: 'center',
+  },
+  pillIntrinsic: {
+    minWidth: PILL_HEIGHT,
+  },
+  pillStretch: {
+    flex: 1,
+    paddingHorizontal: 6,
+  },
+  pillFallback: {
+    backgroundColor: 'rgba(127,127,127,0.18)',
   },
   fillWidth: {
     width: '100%',
