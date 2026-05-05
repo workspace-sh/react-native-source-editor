@@ -12,6 +12,7 @@ class SourceEditorView: ExpoView {
   private var textDelegate: TextDelegate?
   private var currentLanguage: HighlightLanguage = .plaintext
   private var isReHighlighting = false
+  private var reHighlightScheduled = false
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -35,7 +36,7 @@ class SourceEditorView: ExpoView {
         ])
       },
       onTextChanged: { [weak self] in
-        self?.reHighlight()
+        self?.scheduleReHighlight()
       }
     )
     textDelegate = delegate
@@ -51,8 +52,11 @@ class SourceEditorView: ExpoView {
   func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
-      reHighlight()
     }
+    // Always re-highlight: language/font may have changed in the same
+    // prop update batch even if text didn't, and STTextView can lose
+    // attributes across re-layout (rotation, resize).
+    scheduleReHighlight()
   }
 
   func setEditable(_ value: Bool) {
@@ -74,7 +78,7 @@ class SourceEditorView: ExpoView {
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
     }
-    reHighlight()
+    scheduleReHighlight()
   }
 
   func setTheme(_ theme: String) {
@@ -101,10 +105,24 @@ class SourceEditorView: ExpoView {
 
   func setLanguage(_ value: String) {
     currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
-    reHighlight()
+    scheduleReHighlight()
   }
 
-  private func reHighlight() {
+  // Coalesce reHighlight calls onto the next runloop tick so that a single
+  // batch of prop updates (e.g. text + language together) results in one
+  // highlight pass using the FINAL state of every prop, not whichever one
+  // happened to be applied first.
+  private func scheduleReHighlight() {
+    if isReHighlighting || reHighlightScheduled { return }
+    reHighlightScheduled = true
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      self.reHighlightScheduled = false
+      self.performReHighlight()
+    }
+  }
+
+  private func performReHighlight() {
     guard !isReHighlighting else { return }
     isReHighlighting = true
     defer { isReHighlighting = false }
@@ -162,6 +180,7 @@ class SourceEditorView: ExpoView {
   private var textDelegate: TextDelegate?
   private var currentLanguage: HighlightLanguage = .plaintext
   private var isReHighlighting = false
+  private var reHighlightScheduled = false
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -179,7 +198,7 @@ class SourceEditorView: ExpoView {
         ])
       },
       onTextChanged: { [weak self] in
-        self?.reHighlight()
+        self?.scheduleReHighlight()
       }
     )
     textDelegate = delegate
@@ -199,8 +218,8 @@ class SourceEditorView: ExpoView {
   func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
-      reHighlight()
     }
+    scheduleReHighlight()
   }
 
   func setEditable(_ value: Bool) {
@@ -224,7 +243,7 @@ class SourceEditorView: ExpoView {
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
     }
-    reHighlight()
+    scheduleReHighlight()
   }
 
   func setTheme(_ theme: String) {
@@ -251,10 +270,24 @@ class SourceEditorView: ExpoView {
 
   func setLanguage(_ value: String) {
     currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
-    reHighlight()
+    scheduleReHighlight()
   }
 
-  private func reHighlight() {
+  // Coalesce reHighlight calls onto the next runloop tick so that a single
+  // batch of prop updates (e.g. text + language together) results in one
+  // highlight pass using the FINAL state of every prop, not whichever one
+  // happened to be applied first.
+  private func scheduleReHighlight() {
+    if isReHighlighting || reHighlightScheduled { return }
+    reHighlightScheduled = true
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      self.reHighlightScheduled = false
+      self.performReHighlight()
+    }
+  }
+
+  private func performReHighlight() {
     guard !isReHighlighting else { return }
     isReHighlighting = true
     defer { isReHighlighting = false }
