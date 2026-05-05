@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  type LayoutChangeEvent,
   Keyboard,
   StyleSheet,
   View,
@@ -10,11 +9,18 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import {
-  GlassView,
-  isLiquidGlassAvailable,
-} from 'expo-glass-effect';
-import { Host, Picker, Text } from '@expo/ui/swift-ui';
-import { pickerStyle, tag } from '@expo/ui/swift-ui/modifiers';
+  GlassEffectContainer,
+  HStack,
+  Host,
+  Picker,
+  Text,
+} from '@expo/ui/swift-ui';
+import {
+  controlSize,
+  glassEffect,
+  pickerStyle,
+  tag,
+} from '@expo/ui/swift-ui/modifiers';
 import { WebView } from 'react-native-webview';
 import { marked } from 'marked';
 import SourceEditor, {
@@ -113,7 +119,6 @@ function Demo() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
-  const glassAvailable = isLiquidGlassAvailable();
 
   const isMarkdown = language === 'markdown';
   const showPreview = isMarkdown && viewMode === 'preview';
@@ -132,11 +137,7 @@ function Demo() {
     }
   };
 
-  const onBottomLayout = (e: LayoutChangeEvent) => {
-    setBottomBarHeight(e.nativeEvent.layout.height);
-  };
-
-  // Auto-focus the editor (and surface the keyboard) when in source mode.
+  // Auto-focus the editor (and surface the keyboard) in source mode.
   // Explicitly blur when switching to preview so the keyboard goes away.
   useEffect(() => {
     if (showPreview) {
@@ -148,8 +149,7 @@ function Demo() {
     return () => clearTimeout(t);
   }, [showPreview, language]);
 
-  // Lift the bottom toolbar above the keyboard so the user always has a way
-  // to switch to Preview (and thereby dismiss the keyboard).
+  // Lift the toolbar above the keyboard so Source/Preview is always reachable.
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', (e) => {
       setKeyboardHeight(e.endCoordinates.height);
@@ -183,7 +183,7 @@ function Demo() {
           theme="auto"
           contentInsets={{
             top: insets.top + 12,
-            bottom: bottomBarHeight + 16,
+            bottom: bottomBarHeight + keyboardHeight + 16,
             left: Math.max(8, insets.left),
             right: Math.max(8, insets.right),
           }}
@@ -194,7 +194,7 @@ function Demo() {
 
       <View
         style={[
-          styles.bottomRow,
+          styles.toolbarPositioner,
           {
             bottom: keyboardHeight,
             paddingBottom: keyboardHeight > 0 ? 8 : insets.bottom + 8,
@@ -202,68 +202,60 @@ function Demo() {
             paddingRight: Math.max(16, insets.right),
           },
         ]}
-        onLayout={onBottomLayout}
         pointerEvents="box-none"
       >
-        <Pill glassAvailable={glassAvailable} fixedWidth={LANGUAGE_PILL_WIDTH}>
-          <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
-            <Picker
-              modifiers={[pickerStyle('menu')]}
-              selection={language}
-              onSelectionChange={(value) => onLanguageChange(value as DemoLanguage)}
-            >
-              <Text modifiers={[tag('markdown')]}>{LANGUAGE_LABEL.markdown}</Text>
-              <Text modifiers={[tag('json')]}>{LANGUAGE_LABEL.json}</Text>
-              <Text modifiers={[tag('javascript')]}>{LANGUAGE_LABEL.javascript}</Text>
-              <Text modifiers={[tag('typescript')]}>{LANGUAGE_LABEL.typescript}</Text>
-            </Picker>
-          </Host>
-        </Pill>
-
-        {isMarkdown && (
-          <Pill glassAvailable={glassAvailable} stretch>
-            <Host matchContents={{ vertical: true }} style={styles.fillWidth}>
+        <Host
+          matchContents={{ vertical: true }}
+          style={styles.toolbarHost}
+          onLayoutContent={(e) => setBottomBarHeight(e.nativeEvent.height)}
+        >
+          <GlassEffectContainer spacing={8}>
+            <HStack spacing={8}>
               <Picker
-                modifiers={[pickerStyle('segmented')]}
-                selection={viewMode}
-                onSelectionChange={(value) => setViewMode(value as ViewMode)}
+                modifiers={[
+                  pickerStyle('menu'),
+                  controlSize('large'),
+                  glassEffect({
+                    shape: 'capsule',
+                    glass: { variant: 'regular', interactive: true },
+                  }),
+                ]}
+                selection={language}
+                onSelectionChange={(value) =>
+                  onLanguageChange(value as DemoLanguage)
+                }
               >
-                <Text modifiers={[tag('source')]}>Source</Text>
-                <Text modifiers={[tag('preview')]}>Preview</Text>
+                <Text modifiers={[tag('markdown')]}>
+                  {LANGUAGE_LABEL.markdown}
+                </Text>
+                <Text modifiers={[tag('json')]}>{LANGUAGE_LABEL.json}</Text>
+                <Text modifiers={[tag('javascript')]}>
+                  {LANGUAGE_LABEL.javascript}
+                </Text>
+                <Text modifiers={[tag('typescript')]}>
+                  {LANGUAGE_LABEL.typescript}
+                </Text>
               </Picker>
-            </Host>
-          </Pill>
-        )}
+
+              {isMarkdown && (
+                <Picker
+                  modifiers={[
+                    pickerStyle('segmented'),
+                    controlSize('large'),
+                  ]}
+                  selection={viewMode}
+                  onSelectionChange={(value) => setViewMode(value as ViewMode)}
+                >
+                  <Text modifiers={[tag('source')]}>Source</Text>
+                  <Text modifiers={[tag('preview')]}>Preview</Text>
+                </Picker>
+              )}
+            </HStack>
+          </GlassEffectContainer>
+        </Host>
       </View>
     </View>
   );
-}
-
-function Pill({
-  glassAvailable,
-  stretch = false,
-  fixedWidth,
-  children,
-}: {
-  glassAvailable: boolean;
-  stretch?: boolean;
-  fixedWidth?: number;
-  children: React.ReactNode;
-}) {
-  const sizing = stretch
-    ? styles.pillStretch
-    : fixedWidth != null
-      ? { width: fixedWidth }
-      : styles.pillIntrinsic;
-
-  if (glassAvailable) {
-    return (
-      <GlassView style={[styles.pill, sizing]} glassEffectStyle="regular">
-        {children}
-      </GlassView>
-    );
-  }
-  return <View style={[styles.pill, sizing, styles.pillFallback]}>{children}</View>;
 }
 
 function wrapMarkdownHTML(
@@ -317,40 +309,17 @@ function wrapMarkdownHTML(
 </html>`;
 }
 
-const PILL_HEIGHT = 44;
-const LANGUAGE_PILL_WIDTH = 140;
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   editor: { flex: 1 },
   preview: { flex: 1, backgroundColor: 'transparent' },
-  bottomRow: {
+  toolbarPositioner: {
     position: 'absolute',
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
     paddingTop: 8,
   },
-  pill: {
-    height: PILL_HEIGHT,
-    borderRadius: PILL_HEIGHT / 2,
-    overflow: 'hidden',
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-  },
-  pillIntrinsic: {
-    minWidth: PILL_HEIGHT,
-  },
-  pillStretch: {
-    flex: 1,
-    paddingHorizontal: 6,
-  },
-  pillFallback: {
-    backgroundColor: 'rgba(127,127,127,0.18)',
-  },
-  fillWidth: {
+  toolbarHost: {
     width: '100%',
   },
 });

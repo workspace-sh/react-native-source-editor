@@ -13,7 +13,6 @@
     "@workspace-sh/react-native-source-editor": "file:../..",
     "expo": "~55.0.19",
     "expo-build-properties": "~55.0.5",
-    "expo-glass-effect": "~55.0.10",
     "marked": "^18.0.3",
     "react": "19.2.0",
     "react-native": "0.83.6",
