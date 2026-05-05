@@ -318,16 +318,35 @@ function Demo() {
 // (interface/type declarations, simple `: Type` annotations, `as Type`
 // casts, `import type {...}`). Not a real type-checker; good enough for
 // the example's playground purpose.
+//
+// The annotation strip is intentionally conservative: it only removes
+// `: Type` where Type looks like an actual type (uppercase identifier or
+// known primitive, optionally with generics / array suffix / unions).
+// That keeps it from chewing through object-literal values like
+// `name: 'Alice'`.
 function stripTSTypes(ts: string): string {
   let s = ts;
   // `import type { ... } from '...'`
-  s = s.replace(/^\s*import\s+type\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?\s*$/gm, '');
-  // `interface Foo (extends Bar) { ... }` (assumes closing brace at start of line)
-  s = s.replace(/^\s*interface\s+\w+(?:\s+extends\s+[^{]+)?\s*\{[\s\S]*?^\}\s*$/gm, '');
+  s = s.replace(
+    /^\s*import\s+type\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?\s*$/gm,
+    ''
+  );
+  // `interface Foo (extends Bar) { ... }` — assumes closing brace at start of line.
+  s = s.replace(
+    /^\s*interface\s+\w+(?:\s+extends\s+[^{]+)?\s*\{[\s\S]*?^\}\s*$/gm,
+    ''
+  );
   // `type Foo = ...;`
   s = s.replace(/^\s*type\s+\w+\s*=\s*[^;\n]+;?\s*$/gm, '');
-  // `: Type` (or `: Type[]`, `: A | B`) before `=`, `,`, `)`, `{`, EOL
-  s = s.replace(/(\w+\s*\??)\s*:\s*[\w<>\[\]\|&\s,.'"]+?(?=\s*[=,)\{\n;])/g, '$1');
+  // `: Type` annotations. Type = (Uppercase\w* | primitive) optionally
+  // generic / array / union with same.
+  const PRIM = 'string|number|boolean|void|any|unknown|never|object|null|undefined|bigint|symbol';
+  const TYPE = `(?:[A-Z]\\w*|${PRIM})(?:<[^>]*>)?(?:\\[\\])*`;
+  const UNION = `${TYPE}(?:\\s*[|&]\\s*${TYPE})*`;
+  s = s.replace(
+    new RegExp(`(\\w+\\s*\\??)\\s*:\\s*${UNION}(?=\\s*[=,)\\{\\n;])`, 'g'),
+    '$1'
+  );
   // `as Type` casts
   s = s.replace(/\s+as\s+[\w<>\[\]]+/g, '');
   return s;
@@ -378,7 +397,10 @@ function wrapJSConsoleHTML(
     if (v === undefined) return 'undefined';
     if (typeof v === 'string') return v;
     if (typeof v === 'function') return 'ƒ ' + (v.name || 'anonymous');
-    if (v instanceof Error) return v.stack || (v.name + ': ' + v.message);
+    if (v instanceof Error) {
+      var head = (v.name || 'Error') + ': ' + (v.message || '<no message>');
+      return v.stack ? head + '\\n' + v.stack : head;
+    }
     try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
   }
 
