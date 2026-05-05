@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
+  Keyboard,
   StyleSheet,
   View,
 } from 'react-native';
@@ -109,6 +110,7 @@ function Demo() {
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [content, setContent] = useState(SAMPLES.markdown);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
   const insets = useSafeAreaInsets();
   const glassAvailable = isLiquidGlassAvailable();
@@ -134,13 +136,32 @@ function Demo() {
     setBottomBarHeight(e.nativeEvent.layout.height);
   };
 
-  // Auto-focus the editor (and surface the keyboard) whenever we're showing
-  // it, so the user can start typing without an explicit Focus button.
+  // Auto-focus the editor (and surface the keyboard) when in source mode.
+  // Explicitly blur when switching to preview so the keyboard goes away.
   useEffect(() => {
-    if (showPreview) return;
+    if (showPreview) {
+      editorRef.current?.blur();
+      Keyboard.dismiss();
+      return;
+    }
     const t = setTimeout(() => editorRef.current?.focus(), 120);
     return () => clearTimeout(t);
   }, [showPreview, language]);
+
+  // Lift the bottom toolbar above the keyboard so the user always has a way
+  // to switch to Preview (and thereby dismiss the keyboard).
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hide = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -175,7 +196,8 @@ function Demo() {
         style={[
           styles.bottomRow,
           {
-            paddingBottom: insets.bottom + 8,
+            bottom: keyboardHeight,
+            paddingBottom: keyboardHeight > 0 ? 8 : insets.bottom + 8,
             paddingLeft: Math.max(16, insets.left),
             paddingRight: Math.max(16, insets.right),
           },
@@ -304,7 +326,6 @@ const styles = StyleSheet.create({
   preview: { flex: 1, backgroundColor: 'transparent' },
   bottomRow: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
