@@ -39,22 +39,42 @@ target 'MacosApp-macOS' do
     # fmt 11 + Apple Clang in C++20 mode raises "call to consteval
     # function … is not a constant expression" inside fmt's headers
     # whenever any pod (RCT-Folly, React-jsi, …) includes them. We
-    # tried defining FMT_USE_CONSTEVAL=0 via xcconfig / build settings
-    # and the define wasn't reaching the compile units in time — so
-    # patch fmt's `base.h` directly: a no-op marker line plus a guarded
-    # `#define FMT_USE_CONSTEVAL 0` before the auto-detection runs.
-    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
-    if File.exist?(fmt_base)
-      text = File.read(fmt_base)
-      unless text.include?('// rnse-fmt-consteval-patch')
-        header = "// rnse-fmt-consteval-patch\n" \
-                 "#ifndef FMT_USE_CONSTEVAL\n" \
-                 "#define FMT_USE_CONSTEVAL 0\n" \
-                 "#endif\n\n"
-        File.write(fmt_base, header + text)
+    # patch every fmt header that defines the macro (base.h is the
+    # primary one in fmt 11, but we also touch core.h / format.h if
+    # they exist), AND we inject the same define into every xcconfig
+    # so consumers don't even reach the auto-detection.
+    patch_marker = '// rnse-fmt-consteval-patch'
+    patch_header = "#{patch_marker}\n" \
+                   "#ifndef FMT_USE_CONSTEVAL\n" \
+                   "#define FMT_USE_CONSTEVAL 0\n" \
+                   "#endif\n\n"
+
+    fmt_dir = File.join(installer.sandbox.root.to_s, 'fmt', 'include', 'fmt')
+    Pod::UI.puts "[rnse-fmt-patch] sandbox=#{installer.sandbox.root}"
+    Pod::UI.puts "[rnse-fmt-patch] fmt_dir exists=#{File.directory?(fmt_dir)}"
+
+    %w[base.h core.h format.h].each do |name|
+      path = File.join(fmt_dir, name)
+      next unless File.exist?(path)
+      text = File.read(path)
+      if text.include?(patch_marker)
+        Pod::UI.puts "[rnse-fmt-patch] already patched: #{name}"
+      else
+        File.write(path, patch_header + text)
+        Pod::UI.puts "[rnse-fmt-patch] patched: #{name}"
       end
-    else
-      Pod::UI.warn "[react-native-source-editor] Couldn't find fmt/base.h to patch — fmt consteval workaround skipped."
+    end
+
+    # Belt-and-braces: append the define to every xcconfig under the
+    # sandbox so a fmt header included BEFORE base.h still gets it.
+    Dir.glob(File.join(installer.sandbox.root.to_s, '**', '*.xcconfig')).each do |xcconfig|
+      contents = File.read(xcconfig)
+      next if contents.include?('FMT_USE_CONSTEVAL=0')
+      File.open(xcconfig, 'a') do |f|
+        f.puts ''
+        f.puts '// rnse-fmt-consteval-patch'
+        f.puts 'GCC_PREPROCESSOR_DEFINITIONS = $(inherited) FMT_USE_CONSTEVAL=0'
+      end
     end
   end
 end
