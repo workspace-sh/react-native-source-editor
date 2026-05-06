@@ -21,18 +21,20 @@ From the **repo root**:
 npm run macos:plugin    # one-time: gem install cocoapods-spm (shared with iOS example)
 npm run macos:install   # one-time: npm install --legacy-peer-deps in example/macos-app
 npm run macos:pods      # pod install in example/macos-app/macos
-npm run macos:run       # react-native run-macos
+npm run macos:dev       # Metro + react-native run-macos, concurrently
 ```
 
-Or open `macos/MacosApp.xcworkspace` in Xcode and ⌘R.
+`react-native run-macos` does **not** start Metro itself (unlike Expo's `expo run:ios`), so `macos:dev` runs both side by side via `concurrently`. If you prefer two terminals: `macos:start` (or `macos:clear`) in one, `macos:run` in the other.
 
-`react-native run-macos` does **not** auto-install pods (unlike Expo's `expo run:ios`). You must run `macos:pods` after any native dep change.
+Or open `macos/MacosApp.xcworkspace` in Xcode and ⌘R after starting Metro with `macos:start`.
+
+`macos:run` also doesn't auto-install pods. Run `macos:pods` after any native dep change.
 
 Other root scripts:
 
-- `macos:start` / `macos:clear` — Metro
-- `macos:run` — build + launch
-- `macos:dev` — `concurrently` clear + run
+- `macos:start` / `macos:clear` — Metro only (clear = watchman wipe + `--reset-cache`)
+- `macos:run` — build + launch only (assumes Metro is already running)
+- `macos:dev` — both, concurrently (the usual entry point)
 - `macos:pods` — pod install
 - `macos:clean` — wipe `Pods/`, `Podfile.lock`, `build/` (next `pods` regenerates)
 

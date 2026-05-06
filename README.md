@@ -66,10 +66,10 @@ Pod install is handled by `expo run:ios` (Expo CNG) — no separate `ios:pods`.
 npm run macos:plugin         # one-time: gem install cocoapods-spm (shared)
 npm run macos:install        # one-time: npm install --legacy-peer-deps
 npm run macos:pods           # pod install in example/macos-app/macos
-npm run macos:run            # react-native run-macos
+npm run macos:dev            # Metro + run-macos, concurrently
 ```
 
-Unlike the iOS example, `react-native-macos` has no CNG step — pods are managed by hand via `macos:pods` (and `macos:clean` to wipe).
+Unlike Expo's `expo run:ios`, `react-native run-macos` doesn't start Metro itself — `macos:dev` runs both side by side. Pods are managed by hand via `macos:pods` (and `macos:clean` to wipe). If you prefer separate terminals: `macos:start` + `macos:run`.
 
 See [docs/installation.md](docs/installation.md) for why `cocoapods-spm` is required.
 
