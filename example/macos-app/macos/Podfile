@@ -65,6 +65,32 @@ target 'MacosApp-macOS' do
       end
     end
 
+    # The above #define-at-top-of-file gets clobbered: fmt's auto-detection
+    # block (in base.h) is NOT wrapped in #ifndef, so it unconditionally
+    # reassigns FMT_USE_CONSTEVAL based on compiler features. On Apple
+    # Clang 17 it picks the `__cpp_consteval` branch and sets it to 1.
+    # Neutralise that by injecting an unconditional override AFTER the
+    # detection chain but BEFORE the FMT_CONSTEVAL macro is defined.
+    base_h = File.join(fmt_dir, 'base.h')
+    if File.exist?(base_h)
+      text = File.read(base_h)
+      override_marker = '// rnse-fmt-consteval-override'
+      anchor = "#endif\n#if FMT_USE_CONSTEVAL\n"
+      if text.include?(override_marker)
+        Pod::UI.puts '[rnse-fmt-patch] override already present in base.h'
+      elsif text.include?(anchor)
+        override = "#endif\n" \
+                   "#{override_marker}\n" \
+                   "#undef FMT_USE_CONSTEVAL\n" \
+                   "#define FMT_USE_CONSTEVAL 0\n" \
+                   "#if FMT_USE_CONSTEVAL\n"
+        File.write(base_h, text.sub(anchor, override))
+        Pod::UI.puts '[rnse-fmt-patch] injected override into base.h'
+      else
+        Pod::UI.warn '[rnse-fmt-patch] anchor not found in base.h — fmt structure may have changed'
+      end
+    end
+
     # Belt-and-braces: append the define to every xcconfig under the
     # sandbox so a fmt header included BEFORE base.h still gets it.
     Dir.glob(File.join(installer.sandbox.root.to_s, '**', '*.xcconfig')).each do |xcconfig|
