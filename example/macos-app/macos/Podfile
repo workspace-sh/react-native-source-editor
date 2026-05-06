@@ -35,5 +35,18 @@ target 'MacosApp-macOS' do
 
   post_install do |installer|
     react_native_post_install(installer)
+
+    # `fmt` (vendored by RN) hits a "call to consteval function ... is not
+    # a constant expression" error on Xcode 16/17 + macOS 14. Disabling
+    # consteval avoids the bad code path; runtime behaviour is identical.
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'fmt'
+      target.build_configurations.each do |config|
+        defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)']
+        defs = [defs] unless defs.is_a?(Array)
+        defs << 'FMT_USE_CONSTEVAL=0' unless defs.include?('FMT_USE_CONSTEVAL=0')
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+      end
+    end
   end
 end
