@@ -36,17 +36,26 @@ target 'MacosApp-macOS' do
   post_install do |installer|
     react_native_post_install(installer)
 
-    # `fmt` (vendored by RN) hits a "call to consteval function ... is not
-    # a constant expression" error on Xcode 16/17 + macOS 14. Disabling
-    # consteval avoids the bad code path; runtime behaviour is identical.
-    installer.pods_project.targets.each do |target|
-      next unless target.name == 'fmt'
-      target.build_configurations.each do |config|
-        defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)']
-        defs = [defs] unless defs.is_a?(Array)
-        defs << 'FMT_USE_CONSTEVAL=0' unless defs.include?('FMT_USE_CONSTEVAL=0')
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+    # `fmt` (vendored by RN) hits "call to consteval function ... is not
+    # a constant expression" on Xcode 16/17 + macOS 14. The error is
+    # raised in fmt's headers but instantiated in EVERY pod that includes
+    # them (RCT-Folly, React-jsi, …) — so the define has to land on every
+    # consumer, not just the fmt target. Apply at the umbrella-project
+    # level (xcconfig) AND on each target for belt-and-braces.
+    apply_fmt_define = lambda do |config|
+      defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] || ['$(inherited)']
+      defs = [defs] unless defs.is_a?(Array)
+      defs << 'FMT_USE_CONSTEVAL=0' unless defs.include?('FMT_USE_CONSTEVAL=0')
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] = defs
+      cxxflags = config.build_settings['OTHER_CPLUSPLUSFLAGS'] || '$(inherited)'
+      unless cxxflags.to_s.include?('-DFMT_USE_CONSTEVAL=0')
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = "#{cxxflags} -DFMT_USE_CONSTEVAL=0"
       end
+    end
+
+    installer.pods_project.build_configurations.each(&apply_fmt_define)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each(&apply_fmt_define)
     end
   end
 end
