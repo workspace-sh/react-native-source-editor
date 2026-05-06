@@ -1,0 +1,39 @@
+require 'pathname'
+
+ws_dir = Pathname.new(__dir__)
+ws_dir = ws_dir.parent until
+  File.exist?("#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb") ||
+  ws_dir.expand_path.to_s == '/'
+require "#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb"
+
+# STTextView is SPM-only; the cocoapods-spm plugin bridges it into the
+# Pods project. Unlike the iOS example (which gets this injected by our
+# Expo config plugin during prebuild) react-native-macos has no CNG
+# step, so the wiring lives directly in the Podfile.
+plugin 'cocoapods-spm'
+
+prepare_react_native_project!
+
+target 'MacosApp-macOS' do
+  platform :macos, '14.0'
+  use_native_modules!
+
+  spm_pkg 'STTextView',
+    :url => 'https://github.com/krzyzanowskim/STTextView.git',
+    :version => '2.3.10',
+    :products => ['STTextView']
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
+
+  use_react_native!(
+    :path => '../node_modules/react-native-macos',
+    :fabric_enabled => ENV['RCT_NEW_ARCH_ENABLED'] == '1',
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(installer)
+  end
+end

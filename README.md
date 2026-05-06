@@ -53,12 +53,23 @@ npm run typecheck   # tsc --noEmit
 
 ```sh
 npm run ios:plugin           # one-time: gem install cocoapods-spm
-cd example/ios-app && npm install && cd -    # one-time
+npm run ios:install          # one-time: npm install in example/ios-app
 npm run ios:run              # build + launch on iOS simulator
 npm run ios:dev              # concurrently: clean Metro + run:ios
 ```
 
-Other scripts: `ios:start`, `ios:clear`, `ios:run:device`, `ios:run:device:release`. Pod install is handled by `expo run:ios` (Expo CNG) — no separate `ios:pods`.
+Pod install is handled by `expo run:ios` (Expo CNG) — no separate `ios:pods`.
+
+### Running the macOS example
+
+```sh
+npm run macos:plugin         # one-time: gem install cocoapods-spm (shared)
+npm run macos:install        # one-time: npm install --legacy-peer-deps
+npm run macos:pods           # pod install in example/macos-app/macos
+npm run macos:run            # react-native run-macos
+```
+
+Unlike the iOS example, `react-native-macos` has no CNG step — pods are managed by hand via `macos:pods` (and `macos:clean` to wipe).
 
 See [docs/installation.md](docs/installation.md) for why `cocoapods-spm` is required.
 
