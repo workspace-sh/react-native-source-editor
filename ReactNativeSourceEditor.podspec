@@ -26,14 +26,6 @@ Pod::Spec.new do |s|
   s.private_header_files = ["ios/SourceEditor.h"]
 
   s.swift_version = '5.9'
-  # Build as a static framework (not bare static library) so the
-  # framework's module map ends up in Build/Products where Xcode
-  # expects it. Required because our pod ships Swift sources, and Swift
-  # compiles into a module that consumers must import. Pure Obj-C++
-  # pods (e.g. react-native-enriched-markdown) get away with the
-  # default static-library + private-headers setup; we don't.
-  s.static_framework = true
-
   s.spm_dependency 'STTextView/STTextView'
 
   s.pod_target_xcconfig = {
