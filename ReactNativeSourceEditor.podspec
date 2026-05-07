@@ -26,6 +26,13 @@ Pod::Spec.new do |s|
   s.private_header_files = ["ios/SourceEditor.h"]
 
   s.swift_version = '5.9'
+  # Build as a static framework so the Swift module map lands in
+  # Build/Products where consumers expect it, AND set header_dir so
+  # the umbrella's import paths resolve via the framework name.
+  # Mirrors expo-modules-core's working setup (Swift + macOS + RN).
+  s.static_framework = true
+  s.header_dir = 'ReactNativeSourceEditor'
+
   s.spm_dependency 'STTextView/STTextView'
 
   s.pod_target_xcconfig = {
