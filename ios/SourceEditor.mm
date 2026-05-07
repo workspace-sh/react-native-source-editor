@@ -33,19 +33,21 @@ using namespace facebook::react;
 
     _impl = [[RNSESourceEditorImpl alloc] initWithFrame:frame];
 
-    __weak __typeof(self) weakSelf = self;
+    __weak SourceEditor *weakSelf = self;
     _impl.onChange = ^(NSString *text) {
-      __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf || !strongSelf->_eventEmitter) return;
-      auto emitter = std::static_pointer_cast<const SourceEditorEventEmitter>(
-        strongSelf->_eventEmitter);
+      __strong SourceEditor *strongSelf = weakSelf;
+      if (!strongSelf) return;
+      auto eventEmitter = strongSelf->_eventEmitter;
+      if (!eventEmitter) return;
+      auto emitter = std::static_pointer_cast<const SourceEditorEventEmitter>(eventEmitter);
       emitter->onChangeText({.text = std::string([text UTF8String] ?: "")});
     };
     _impl.onSelection = ^(NSInteger start, NSInteger end) {
-      __typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf || !strongSelf->_eventEmitter) return;
-      auto emitter = std::static_pointer_cast<const SourceEditorEventEmitter>(
-        strongSelf->_eventEmitter);
+      __strong SourceEditor *strongSelf = weakSelf;
+      if (!strongSelf) return;
+      auto eventEmitter = strongSelf->_eventEmitter;
+      if (!eventEmitter) return;
+      auto emitter = std::static_pointer_cast<const SourceEditorEventEmitter>(eventEmitter);
       emitter->onSelectionChange(
         {.start = static_cast<double>(start), .end = static_cast<double>(end)});
     };
@@ -72,13 +74,18 @@ using namespace facebook::react;
   if (oldViewProps.language != newViewProps.language) {
     [_impl setLanguage:RCTNSStringFromString(newViewProps.language)];
   }
-  if (!(oldViewProps.font == newViewProps.font)) {
+  // Codegen structs don't auto-generate operator==; compare fields directly.
+  if (oldViewProps.font.family != newViewProps.font.family ||
+      oldViewProps.font.size != newViewProps.font.size) {
     NSString *family = newViewProps.font.family.empty()
       ? nil
       : RCTNSStringFromString(newViewProps.font.family);
     [_impl setFontWithFamily:family size:newViewProps.font.size];
   }
-  if (!(oldViewProps.contentInsets == newViewProps.contentInsets)) {
+  if (oldViewProps.contentInsets.top != newViewProps.contentInsets.top ||
+      oldViewProps.contentInsets.bottom != newViewProps.contentInsets.bottom ||
+      oldViewProps.contentInsets.left != newViewProps.contentInsets.left ||
+      oldViewProps.contentInsets.right != newViewProps.contentInsets.right) {
     [_impl setContentInsetsWithTop:newViewProps.contentInsets.top
                             bottom:newViewProps.contentInsets.bottom
                               left:newViewProps.contentInsets.left
