@@ -14,12 +14,16 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/workspace-sh/react-native-source-editor.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
-  # Keep our headers out of the framework's umbrella. They pull in
-  # React-Fabric C++ headers (e.g. <atomic> via EventBeat.h); Swift
-  # tries to bridge them and fails because module map context is C, not
-  # C++. Private headers = umbrella stays Swift-only, .mm sees them
-  # directly through quote includes.
-  s.private_header_files = "ios/**/*.h"
+  # ReactNativeSourceEditor.h is a deliberately-empty umbrella header
+  # that anchors the framework module (required because we ship Swift
+  # sources). Every other header pulls in React-Fabric C++ via
+  # RCTViewComponentView, which can't appear in the umbrella — Swift's
+  # module-map step processes it in C, not C++ context, and breaks
+  # at <atomic>. Marking those headers private keeps them out of the
+  # umbrella; .mm files import them via quote includes and stay in
+  # Obj-C++ land.
+  s.public_header_files = "ios/ReactNativeSourceEditor.h"
+  s.private_header_files = ["ios/SourceEditor.h"]
 
   s.swift_version = '5.9'
   s.spm_dependency 'STTextView/STTextView'
