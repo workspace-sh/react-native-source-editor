@@ -1,13 +1,10 @@
-import {
-  codegenNativeCommands,
-  codegenNativeComponent,
-  type CodegenTypes,
-  type HostComponent,
-  type ViewProps,
-} from 'react-native';
-
-type DirectEventHandler<T> = CodegenTypes.DirectEventHandler<T>;
-type Double = CodegenTypes.Double;
+import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
+import codegenNativeCommands from 'react-native/Libraries/Utilities/codegenNativeCommands';
+import type { HostComponent, ViewProps } from 'react-native';
+import type {
+  DirectEventHandler,
+  Double,
+} from 'react-native/Libraries/Types/CodegenTypes';
 
 export type ChangeTextEvent = Readonly<{
   text: string;
