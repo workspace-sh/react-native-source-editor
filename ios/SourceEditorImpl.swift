@@ -102,6 +102,13 @@ public class SourceEditorImpl: UIView {
     scheduleReHighlight()
   }
 
+  @objc public func setLineNumbers(_ value: Bool) {
+    // STTextView (UIKit + AppKit) exposes the same `showsLineNumbers`
+    // property; toggling at runtime adds/removes the gutter view in
+    // place — no remount required.
+    textView.showsLineNumbers = value
+  }
+
   private func scheduleReHighlight() {
     if isReHighlighting || reHighlightScheduled { return }
     reHighlightScheduled = true
@@ -260,6 +267,13 @@ public class SourceEditorImpl: NSView {
   @objc public func setLanguage(_ value: String) {
     currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
     scheduleReHighlight()
+  }
+
+  @objc public func setLineNumbers(_ value: Bool) {
+    // STTextView (UIKit + AppKit) exposes the same `showsLineNumbers`
+    // property; toggling at runtime adds/removes the gutter view in
+    // place — no remount required.
+    textView.showsLineNumbers = value
   }
 
   private func scheduleReHighlight() {

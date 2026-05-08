@@ -33,6 +33,7 @@ export interface NativeProps extends ViewProps {
   font?: FontConfig;
   theme?: string;
   language?: string;
+  lineNumbers?: boolean;
   contentInsets?: ContentInsets;
 
   onChangeText?: DirectEventHandler<ChangeTextEvent>;

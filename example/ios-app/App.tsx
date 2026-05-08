@@ -14,6 +14,7 @@ import {
   Host,
   Picker,
   Text,
+  Toggle,
 } from '@expo/ui/swift-ui';
 import {
   controlSize,
@@ -163,6 +164,7 @@ function Demo() {
   const [language, setLanguage] = useState<DemoLanguage>('markdown');
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [content, setContent] = useState(SAMPLES.markdown);
+  const [lineNumbers, setLineNumbers] = useState(false);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
@@ -234,6 +236,7 @@ function Demo() {
           value={content}
           editable
           language={language}
+          lineNumbers={lineNumbers}
           font={{ size: 13 }}
           theme="auto"
           contentInsets={{
@@ -292,6 +295,21 @@ function Demo() {
                 </Text>
                 <Text modifiers={[tag('html')]}>{LANGUAGE_LABEL.html}</Text>
               </Picker>
+
+              {!showPreview && (
+                <Toggle
+                  modifiers={[
+                    controlSize('large'),
+                    glassEffect({
+                      shape: 'capsule',
+                      glass: { variant: 'regular', interactive: true },
+                    }),
+                  ]}
+                  isOn={lineNumbers}
+                  systemImage="number"
+                  onIsOnChange={setLineNumbers}
+                />
+              )}
 
               {isPreviewable && (
                 <Picker

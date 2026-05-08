@@ -36,6 +36,7 @@ export default function Editor() {
 | `font` | `{ family?: string; size?: number }` | system mono @ 14 | Falls back to monospaced system font if `family` is missing or unresolvable. |
 | `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | `auto` follows system appearance. |
 | `language` | `'plaintext' \| 'markdown' \| 'json' \| 'javascript' \| 'typescript' \| 'html'` | `'plaintext'` | Syntax highlighting via attributed text. `html` highlights nested CSS (in `<style>`) and JS (in `<script>`). Colours respect `theme` and adapt to system semantic colours. |
+| `lineNumbers` | `boolean` | `false` | Toggles STTextView's line-number gutter. Runtime-settable — flipping the prop adds/removes the gutter view in place without remounting. Default off so the editor is gutter-less unless explicitly opted in. |
 | `contentInsets` | `{ top?, bottom?, left?, right? }` (numbers) | `0` | Padding inside the text container. Use to keep first/last lines clear of floating UI like translucent headers/footers. |
 | `onChangeText` | `(text: string) => void` | — | Fires on every text change. |
 | `onSelectionChange` | `(selection: { start: number; end: number }) => void` | — | Fires on selection updates. |

@@ -66,9 +66,9 @@ Bare-RN hosts: see [docs/installation.md](docs/installation.md) for the manual `
 
 ## Roadmap
 
-- **v0.x (now)** — bare RN Fabric library, iOS shipping. JS API: text, selection, font, theme, language (markdown / json / js / ts / html), `contentInsets`, imperative `focus`/`blur`.
+- **v0.x (now)** — bare RN Fabric library, iOS shipping. JS API: text, selection, font, theme, language (markdown / json / js / ts / html), `lineNumbers` gutter toggle, `contentInsets`, imperative `focus`/`blur`.
 - **v0.x next** — macOS via Obj-C++ port ([#27](https://github.com/workspace-sh/react-native-source-editor/issues/27)). Unblocks the `example/macos-app/` target and re-adds `:osx` to the podspec.
-- **v1.0** — line number gutter ([#10](https://github.com/workspace-sh/react-native-source-editor/issues/10)), expanded font customisation, npm publish under `@workspace-sh/react-native-source-editor`.
+- **v1.0** — expanded font customisation, npm publish under `@workspace-sh/react-native-source-editor`.
 - **Post-1.0** — iPadOS polish, Android (TextKit alternative), Windows, Linux, Web.
 
 ## Contributing
