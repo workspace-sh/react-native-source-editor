@@ -19,8 +19,10 @@ import {
 import {
   controlSize,
   glassEffect,
+  labelsHidden,
   pickerStyle,
   tag,
+  toggleStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import { WebView } from 'react-native-webview';
 import { marked } from 'marked';
@@ -299,7 +301,9 @@ function Demo() {
               {!showPreview && (
                 <Toggle
                   modifiers={[
+                    toggleStyle('button'),
                     controlSize('large'),
+                    labelsHidden(),
                     glassEffect({
                       shape: 'capsule',
                       glass: { variant: 'regular', interactive: true },
