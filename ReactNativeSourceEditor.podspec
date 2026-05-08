@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => '16.0', :osx => '14.0' }
+  s.platforms    = { :ios => '16.0' }
   s.source       = { :git => "https://github.com/workspace-sh/react-native-source-editor.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
