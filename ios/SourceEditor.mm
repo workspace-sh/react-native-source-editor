@@ -74,6 +74,9 @@ using namespace facebook::react;
   if (oldViewProps.language != newViewProps.language) {
     [_impl setLanguage:RCTNSStringFromString(newViewProps.language)];
   }
+  if (oldViewProps.lineNumbers != newViewProps.lineNumbers) {
+    [_impl setLineNumbers:newViewProps.lineNumbers];
+  }
   // Codegen structs don't auto-generate operator==; compare fields directly.
   if (oldViewProps.font.family != newViewProps.font.family ||
       oldViewProps.font.size != newViewProps.font.size) {

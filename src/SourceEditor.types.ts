@@ -39,6 +39,7 @@ export type SourceEditorViewProps = {
   font?: FontConfig;
   theme?: Theme;
   language?: Language;
+  lineNumbers?: boolean;
   contentInsets?: ContentInsets;
   onChangeText?: (event: { nativeEvent: ChangeTextEventPayload }) => void;
   onSelectionChange?: (event: { nativeEvent: SelectionChangeEventPayload }) => void;
@@ -52,6 +53,7 @@ export type SourceEditorProps = {
   font?: FontConfig;
   theme?: Theme;
   language?: Language;
+  lineNumbers?: boolean;
   contentInsets?: ContentInsets;
   onChangeText?: (text: string) => void;
   onSelectionChange?: (selection: Selection) => void;

@@ -14,12 +14,15 @@ import {
   Host,
   Picker,
   Text,
+  Toggle,
 } from '@expo/ui/swift-ui';
 import {
   controlSize,
   glassEffect,
+  labelsHidden,
   pickerStyle,
   tag,
+  toggleStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import { WebView } from 'react-native-webview';
 import { marked } from 'marked';
@@ -163,6 +166,7 @@ function Demo() {
   const [language, setLanguage] = useState<DemoLanguage>('markdown');
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [content, setContent] = useState(SAMPLES.markdown);
+  const [lineNumbers, setLineNumbers] = useState(false);
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const editorRef = useRef<SourceEditorRef>(null);
@@ -234,6 +238,7 @@ function Demo() {
           value={content}
           editable
           language={language}
+          lineNumbers={lineNumbers}
           font={{ size: 13 }}
           theme="auto"
           contentInsets={{
@@ -292,6 +297,23 @@ function Demo() {
                 </Text>
                 <Text modifiers={[tag('html')]}>{LANGUAGE_LABEL.html}</Text>
               </Picker>
+
+              {!showPreview && (
+                <Toggle
+                  modifiers={[
+                    toggleStyle('button'),
+                    controlSize('large'),
+                    labelsHidden(),
+                    glassEffect({
+                      shape: 'capsule',
+                      glass: { variant: 'regular', interactive: true },
+                    }),
+                  ]}
+                  isOn={lineNumbers}
+                  systemImage="number"
+                  onIsOnChange={setLineNumbers}
+                />
+              )}
 
               {isPreviewable && (
                 <Picker
