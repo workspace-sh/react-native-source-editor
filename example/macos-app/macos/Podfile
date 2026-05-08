@@ -1,0 +1,51 @@
+require 'pathname'
+
+ws_dir = Pathname.new(__dir__)
+ws_dir = ws_dir.parent until
+  File.exist?("#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb") ||
+  ws_dir.expand_path.to_s == '/'
+require "#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb"
+
+# STTextView is SPM-only; cocoapods-spm bridges it into the Pods project.
+plugin 'cocoapods-spm'
+
+prepare_react_native_project!
+
+target 'MacosApp-macOS' do
+  platform :macos, '14.0'
+  use_native_modules!
+
+  spm_pkg 'STTextView',
+    :url => 'https://github.com/krzyzanowskim/STTextView.git',
+    :version => '2.3.10',
+    :products => ['STTextView']
+
+  use_react_native!(
+    :path => '../node_modules/react-native-macos',
+    :fabric_enabled => true,
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    react_native_post_install(installer)
+
+    # Xcode 26 / Apple Clang 17 has a broken consteval implementation that
+    # fails inside fmt. Insert a targeted #elif into base.h scoping
+    # FMT_USE_CONSTEVAL=0 to that compiler version specifically.
+    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      content = File.read(fmt_base)
+      unless content.include?('__apple_build_version__ >= 17000000')
+        content.sub!(
+          '#elif defined(__cpp_consteval)',
+          "#elif defined(__apple_build_version__) && __apple_build_version__ >= 17000000L\n" \
+          "#  define FMT_USE_CONSTEVAL 0  // consteval is broken in Apple clang 17+ (Xcode 26).\n" \
+          '#elif defined(__cpp_consteval)'
+        )
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, content)
+      end
+    end
+  end
+end

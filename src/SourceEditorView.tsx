@@ -1,19 +1,53 @@
-import { requireNativeView } from 'expo';
 import * as React from 'react';
+import type { NativeSyntheticEvent } from 'react-native';
 
-import { SourceEditorViewProps } from './SourceEditor.types';
+import SourceEditorNativeView, {
+  Commands,
+  type ChangeTextEvent,
+  type SelectionChangeEvent,
+  type SourceEditorViewType,
+} from './SourceEditorViewNativeComponent';
+import type { SourceEditorViewProps } from './SourceEditor.types';
 
 export type NativeSourceEditorRef = {
-  focus: () => Promise<void>;
-  blur: () => Promise<void>;
+  focus: () => void;
+  blur: () => void;
 };
 
-const NativeView: React.ComponentType<
-  SourceEditorViewProps & React.RefAttributes<NativeSourceEditorRef>
-> = requireNativeView('SourceEditor');
-
 const SourceEditorView = React.forwardRef<NativeSourceEditorRef, SourceEditorViewProps>(
-  (props, ref) => <NativeView {...props} ref={ref} />
+  (props, ref) => {
+    const nativeRef = React.useRef<React.ElementRef<SourceEditorViewType>>(null);
+
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        focus: () => {
+          if (nativeRef.current) Commands.focus(nativeRef.current);
+        },
+        blur: () => {
+          if (nativeRef.current) Commands.blur(nativeRef.current);
+        },
+      }),
+      []
+    );
+
+    const { onChangeText, onSelectionChange, ...rest } = props;
+
+    return (
+      <SourceEditorNativeView
+        ref={nativeRef}
+        {...rest}
+        onChangeText={(event: NativeSyntheticEvent<ChangeTextEvent>) => {
+          onChangeText?.(event);
+        }}
+        onSelectionChange={(event: NativeSyntheticEvent<SelectionChangeEvent>) => {
+          onSelectionChange?.(event);
+        }}
+      />
+    );
+  }
 );
+
+SourceEditorView.displayName = 'SourceEditorView';
 
 export default SourceEditorView;

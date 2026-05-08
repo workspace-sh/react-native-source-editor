@@ -1,79 +1,73 @@
-import ExpoModulesCore
+import Foundation
 
 #if os(iOS)
 import STTextView
 import UIKit
 
-class SourceEditorView: ExpoView {
+@objc(RNSESourceEditorImpl)
+public class SourceEditorImpl: UIView {
   let textView = STTextView()
-  let onChangeText = EventDispatcher()
-  let onSelectionChange = EventDispatcher()
-
   private var textDelegate: TextDelegate?
   private var currentLanguage: HighlightLanguage = .plaintext
   private var isReHighlighting = false
   private var reHighlightScheduled = false
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  @objc public var onChange: ((String) -> Void)?
+  @objc public var onSelection: ((Int, Int) -> Void)?
+
+  override public init(frame: CGRect) {
+    super.init(frame: frame)
+    setupTextView()
+  }
+
+  required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    setupTextView()
+  }
+
+  private func setupTextView() {
     clipsToBounds = true
 
     textView.isScrollEnabled = true
     textView.alwaysBounceVertical = true
-    // We control insets explicitly via textContainerInset (set from JS via
-    // the `contentInsets` prop). Disable UIScrollView's safe-area adjustment
-    // so it doesn't compound with ours.
     textView.contentInsetAdjustmentBehavior = .never
 
     let delegate = TextDelegate(
-      onChange: { [weak self] text in
-        self?.onChangeText(["text": text])
-      },
+      onChange: { [weak self] text in self?.onChange?(text) },
       onSelection: { [weak self] range in
-        self?.onSelectionChange([
-          "start": range.location,
-          "end": range.location + range.length
-        ])
+        self?.onSelection?(range.location, range.location + range.length)
       },
-      onTextChanged: { [weak self] in
-        self?.scheduleReHighlight()
-      }
+      onTextChanged: { [weak self] in self?.scheduleReHighlight() }
     )
     textDelegate = delegate
     textView.textDelegate = delegate
     addSubview(textView)
   }
 
-  override func layoutSubviews() {
+  public override func layoutSubviews() {
     super.layoutSubviews()
     textView.frame = bounds
   }
 
-  func setText(_ value: String) {
+  @objc public func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
     }
-    // Always re-highlight: language/font may have changed in the same
-    // prop update batch even if text didn't, and STTextView can lose
-    // attributes across re-layout (rotation, resize).
     scheduleReHighlight()
   }
 
-  func setEditable(_ value: Bool) {
+  @objc public func setEditable(_ value: Bool) {
     textView.isEditable = value
   }
 
-  func focusEditor() {
-    textView.becomeFirstResponder()
-  }
+  @objc public func focusEditor() { textView.becomeFirstResponder() }
 
-  func blurEditor() {
-    textView.resignFirstResponder()
-  }
+  @objc public func blurEditor() { textView.resignFirstResponder() }
 
-  func setFont(family: String?, size: Double?) {
-    let resolvedSize = CGFloat(size ?? 14)
-    if let family = family, let custom = UIFont(name: family, size: resolvedSize) {
+  @objc public func setFont(family: String?, size: Double) {
+    let resolvedSize = CGFloat(size > 0 ? size : 14)
+    if let family = family, !family.isEmpty,
+       let custom = UIFont(name: family, size: resolvedSize) {
       textView.font = custom
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
@@ -81,7 +75,7 @@ class SourceEditorView: ExpoView {
     scheduleReHighlight()
   }
 
-  func setTheme(_ theme: String) {
+  @objc public func setTheme(_ theme: String) {
     switch theme {
     case "light":
       overrideUserInterfaceStyle = .light
@@ -94,7 +88,7 @@ class SourceEditorView: ExpoView {
     textView.textColor = .label
   }
 
-  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+  @objc public func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
     textView.textContainerInset = UIEdgeInsets(
       top: CGFloat(top),
       left: CGFloat(left),
@@ -103,15 +97,11 @@ class SourceEditorView: ExpoView {
     )
   }
 
-  func setLanguage(_ value: String) {
+  @objc public func setLanguage(_ value: String) {
     currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
     scheduleReHighlight()
   }
 
-  // Coalesce reHighlight calls onto the next runloop tick so that a single
-  // batch of prop updates (e.g. text + language together) results in one
-  // highlight pass using the FINAL state of every prop, not whichever one
-  // happened to be applied first.
   private func scheduleReHighlight() {
     if isReHighlighting || reHighlightScheduled { return }
     reHighlightScheduled = true
@@ -129,11 +119,7 @@ class SourceEditorView: ExpoView {
 
     let text = textView.text ?? ""
     let attrString = NSMutableAttributedString(string: text)
-    Highlighter(
-      language: currentLanguage,
-      theme: .system,
-      baseFont: textView.font
-    ).apply(to: attrString)
+    Highlighter(language: currentLanguage, theme: .system, baseFont: textView.font).apply(to: attrString)
 
     let savedSelection = textView.textSelection
     textView.attributedText = attrString
@@ -167,39 +153,43 @@ private class TextDelegate: NSObject, STTextViewDelegate {
     onSelection(textView.textSelection)
   }
 }
+
 #elseif os(macOS)
 import STTextView
 import AppKit
 
-class SourceEditorView: ExpoView {
+@objc(RNSESourceEditorImpl)
+public class SourceEditorImpl: NSView {
   let scrollView = NSScrollView()
   let textView = STTextView()
-  let onChangeText = EventDispatcher()
-  let onSelectionChange = EventDispatcher()
-
   private var textDelegate: TextDelegate?
   private var currentLanguage: HighlightLanguage = .plaintext
   private var isReHighlighting = false
   private var reHighlightScheduled = false
 
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
+  @objc public var onChange: ((String) -> Void)?
+  @objc public var onSelection: ((Int, Int) -> Void)?
+
+  override public init(frame: CGRect) {
+    super.init(frame: frame)
+    setupTextView()
+  }
+
+  required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    setupTextView()
+  }
+
+  private func setupTextView() {
     wantsLayer = true
     layer?.masksToBounds = true
 
     let delegate = TextDelegate(
-      onChange: { [weak self] text in
-        self?.onChangeText(["text": text])
-      },
+      onChange: { [weak self] text in self?.onChange?(text) },
       onSelection: { [weak self] range in
-        self?.onSelectionChange([
-          "start": range.location,
-          "end": range.location + range.length
-        ])
+        self?.onSelection?(range.location, range.location + range.length)
       },
-      onTextChanged: { [weak self] in
-        self?.scheduleReHighlight()
-      }
+      onTextChanged: { [weak self] in self?.scheduleReHighlight() }
     )
     textDelegate = delegate
     textView.delegate = delegate
@@ -210,35 +200,34 @@ class SourceEditorView: ExpoView {
     addSubview(scrollView)
   }
 
-  override func layout() {
+  public override func layout() {
     super.layout()
     scrollView.frame = bounds
   }
 
-  func setText(_ value: String) {
+  @objc public func setText(_ value: String) {
     if textView.text != value {
       textView.text = value
     }
     scheduleReHighlight()
   }
 
-  func setEditable(_ value: Bool) {
+  @objc public func setEditable(_ value: Bool) {
     textView.isEditable = value
   }
 
-  func focusEditor() {
-    window?.makeFirstResponder(textView)
-  }
+  @objc public func focusEditor() { window?.makeFirstResponder(textView) }
 
-  func blurEditor() {
+  @objc public func blurEditor() {
     if window?.firstResponder === textView {
       window?.makeFirstResponder(nil)
     }
   }
 
-  func setFont(family: String?, size: Double?) {
-    let resolvedSize = CGFloat(size ?? 14)
-    if let family = family, let custom = NSFont(name: family, size: resolvedSize) {
+  @objc public func setFont(family: String?, size: Double) {
+    let resolvedSize = CGFloat(size > 0 ? size : 14)
+    if let family = family, !family.isEmpty,
+       let custom = NSFont(name: family, size: resolvedSize) {
       textView.font = custom
     } else {
       textView.font = .monospacedSystemFont(ofSize: resolvedSize, weight: .regular)
@@ -246,7 +235,7 @@ class SourceEditorView: ExpoView {
     scheduleReHighlight()
   }
 
-  func setTheme(_ theme: String) {
+  @objc public func setTheme(_ theme: String) {
     switch theme {
     case "light":
       appearance = NSAppearance(named: .aqua)
@@ -259,7 +248,7 @@ class SourceEditorView: ExpoView {
     textView.textColor = .textColor
   }
 
-  func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
+  @objc public func setContentInsets(top: Double, bottom: Double, left: Double, right: Double) {
     scrollView.contentInsets = NSEdgeInsets(
       top: CGFloat(top),
       left: CGFloat(left),
@@ -268,15 +257,11 @@ class SourceEditorView: ExpoView {
     )
   }
 
-  func setLanguage(_ value: String) {
+  @objc public func setLanguage(_ value: String) {
     currentLanguage = HighlightLanguage(rawValue: value) ?? .plaintext
     scheduleReHighlight()
   }
 
-  // Coalesce reHighlight calls onto the next runloop tick so that a single
-  // batch of prop updates (e.g. text + language together) results in one
-  // highlight pass using the FINAL state of every prop, not whichever one
-  // happened to be applied first.
   private func scheduleReHighlight() {
     if isReHighlighting || reHighlightScheduled { return }
     reHighlightScheduled = true
@@ -294,11 +279,7 @@ class SourceEditorView: ExpoView {
 
     let text = textView.text ?? ""
     let attrString = NSMutableAttributedString(string: text)
-    Highlighter(
-      language: currentLanguage,
-      theme: .system,
-      baseFont: textView.font
-    ).apply(to: attrString)
+    Highlighter(language: currentLanguage, theme: .system, baseFont: textView.font).apply(to: attrString)
 
     let savedSelection = textView.textSelection
     textView.attributedText = attrString
@@ -330,12 +311,6 @@ private class TextDelegate: NSObject, STTextViewDelegate {
   func textViewDidChangeSelection(_ notification: Notification) {
     guard let textView = notification.object as? STTextView else { return }
     onSelection(textView.textSelection)
-  }
-}
-#else
-class SourceEditorView: ExpoView {
-  required init(appContext: AppContext? = nil) {
-    super.init(appContext: appContext)
   }
 }
 #endif

@@ -2,17 +2,30 @@
   "name": "@workspace-sh/react-native-source-editor",
   "version": "0.0.1",
   "description": "Native source editor for React Native, wrapping STTextView for iOS and macOS.",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "lib/module/index.js",
+  "types": "lib/typescript/src/index.d.ts",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./lib/typescript/src/index.d.ts",
+      "default": "./lib/module/index.js"
+    },
+    "./package.json": "./package.json",
+    "./app.plugin.js": "./app.plugin.js"
+  },
+  "files": [
+    "src",
+    "lib",
+    "ios",
+    "react-native.config.js",
+    "app.plugin.js",
+    "*.podspec",
+    "!ios/build",
+    "!**/__tests__",
+    "!**/.*"
+  ],
   "scripts": {
-    "build": "expo-module build",
-    "clean": "expo-module clean",
-    "lint": "expo-module lint",
-    "test": "expo-module test",
     "typecheck": "tsc --noEmit",
-    "prepare": "expo-module prepare",
-    "prepublishOnly": "expo-module prepublishOnly",
-    "expo-module": "expo-module",
     "ios:plugin": "gem install cocoapods-spm",
     "ios:install": "cd example/ios-app && npm install",
     "ios:clean": "rm -rf example/ios-app/ios",
@@ -22,12 +35,20 @@
     "ios:run": "cd example/ios-app && npx expo run:ios",
     "ios:run:device": "cd example/ios-app && npx expo run:ios --device",
     "ios:run:device:release": "cd example/ios-app && npx expo run:ios --device --configuration Release",
-    "ios:dev": "concurrently \"npm run ios:clear\" \"npm run ios:run\""
+    "ios:dev": "concurrently \"npm run ios:clear\" \"npm run ios:run\"",
+    "macos:plugin": "gem install cocoapods-spm",
+    "macos:install": "cd example/macos-app && npm install --legacy-peer-deps",
+    "macos:pods": "cd example/macos-app/macos && pod install",
+    "macos:clean": "cd example/macos-app/macos && rm -rf Pods Podfile.lock build",
+    "macos:start": "cd example/macos-app && npx react-native start",
+    "macos:clear": "cd example/macos-app && watchman watch-del-all && npx react-native start --reset-cache",
+    "macos:run": "cd example/macos-app && npx react-native run-macos",
+    "macos:dev": "concurrently \"npm run macos:clear\" \"npm run macos:run\""
   },
   "keywords": [
     "react-native",
+    "react-native-macos",
     "expo",
-    "expo-module",
     "text-editor",
     "source-editor",
     "STTextView",
@@ -54,13 +75,28 @@
   "devDependencies": {
     "@types/react": "~19.1.1",
     "concurrently": "^9.1.0",
-    "expo-module-scripts": "^55.0.2",
-    "expo": "^55.0.18",
-    "react-native": "0.82.1"
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "~5.9.2"
   },
   "peerDependencies": {
-    "expo": "*",
     "react": "*",
     "react-native": "*"
+  },
+  "codegenConfig": {
+    "name": "RNSourceEditorSpec",
+    "type": "components",
+    "jsSrcsDir": "src",
+    "outputDir": {
+      "ios": "ios/generated"
+    },
+    "ios": {
+      "components": {
+        "SourceEditor": {
+          "className": "SourceEditor"
+        }
+      }
+    },
+    "includesGeneratedCode": false
   }
 }
