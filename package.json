@@ -36,7 +36,6 @@
     "ios:run:device": "cd example/ios-app && npx expo run:ios --device",
     "ios:run:device:release": "cd example/ios-app && npx expo run:ios --device --configuration Release",
     "ios:dev": "concurrently \"npm run ios:clear\" \"npm run ios:run\"",
-    "macos:plugin": "gem install cocoapods-spm",
     "macos:install": "cd example/macos-app && npm install --legacy-peer-deps",
     "macos:pods": "cd example/macos-app/macos && pod install",
     "macos:clean": "cd example/macos-app/macos && rm -rf Pods Podfile.lock build",

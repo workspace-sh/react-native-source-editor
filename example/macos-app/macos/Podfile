@@ -6,19 +6,33 @@ ws_dir = ws_dir.parent until
   ws_dir.expand_path.to_s == '/'
 require "#{ws_dir}/node_modules/react-native-macos/scripts/react_native_pods.rb"
 
-# STTextView is SPM-only; cocoapods-spm bridges it into the Pods project.
-plugin 'cocoapods-spm'
+# STTextView is SPM-only. We use React Native's first-party `spm_dependency`
+# helper (defined in react_native_pods.rb above) — NOT the third-party
+# `cocoapods-spm` plugin. cocoapods-spm 0.1.20 has an unfixed Xcode 26
+# regression (https://github.com/trinhngocthuyen/cocoapods-spm/issues/172),
+# and Meta + Microsoft are the maintainers of the first-party path going
+# forward. The library podspec calls `spm_dependency s, ...` to register
+# STTextView against the Pods target; SPMManager.apply_on_post_install (run
+# from react_native_post_install) wires the SwiftPackage into Pods.xcodeproj
+# via Xcodeproj-direct, sidestepping the cocoapods-spm UUID allocator.
+#
+# We deliberately stay on STATIC linkage (RN's default for macOS). The SPM
+# helper warns to use dynamic frameworks, but that warning is for SPM graphs
+# whose products themselves dynamically link other Swift frameworks; our
+# single-product STTextView dep links cleanly under static. Switching to
+# `use_frameworks! :linkage => :dynamic` triggers a separate RN macOS bug
+# where React-Core's RCTView.m hardcodes a class ref to RCTTextView (in
+# React-RCTText) that doesn't resolve across dynamic framework boundaries.
+#
+# Tell @workspace-sh/react-native-source-editor's podspec to register
+# STTextView via RN's first-party helper instead of cocoapods-spm.
+ENV['RNSE_USE_RN_SPM'] = '1'
 
 prepare_react_native_project!
 
 target 'MacosApp-macOS' do
   platform :macos, '14.0'
   use_native_modules!
-
-  spm_pkg 'STTextView',
-    :url => 'https://github.com/krzyzanowskim/STTextView.git',
-    :version => '2.3.10',
-    :products => ['STTextView']
 
   use_react_native!(
     :path => '../node_modules/react-native-macos',
