@@ -21,6 +21,12 @@ const config = {
       '@workspace-sh/react-native-source-editor': moduleRoot,
     },
     platforms: ['macos', 'ios', 'native'],
+    // Match the `source` exports condition so we don't need to build `lib/`
+    // for local development — metro reads `src/index.ts` directly. Expo's
+    // metro config sets these for the iOS example automatically;
+    // @react-native/metro-config does not, so we set them explicitly here.
+    unstable_enablePackageExports: true,
+    unstable_conditionNames: ['source', 'react-native', 'require', 'default'],
   },
   watchFolders: [moduleRoot],
 };

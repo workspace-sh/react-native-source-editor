@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => '16.0' }
+  s.platforms    = { :ios => '16.0', :osx => '14.0' }
   s.source       = { :git => "https://github.com/workspace-sh/react-native-source-editor.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
@@ -30,7 +30,32 @@ Pod::Spec.new do |s|
   s.static_framework = true
   s.header_dir = 'ReactNativeSourceEditor'
 
-  s.spm_dependency 'STTextView/STTextView'
+  # STTextView is SPM-only. Two integration paths, picked by ENV from the
+  # consumer Podfile (NOT by `s.respond_to?` — the cocoapods-spm gem
+  # monkey-patches Pod::Specification at gem load time whenever it's
+  # installed, so `respond_to?` can't tell us whether it's actually wired
+  # into this Podfile):
+  #
+  # 1. iOS via Expo CNG (default) — `app.plugin.js` injects the
+  #    `cocoapods-spm` plugin into the iOS Podfile, which registers
+  #    STTextView via `spm_pkg`. The library calls the plugin's
+  #    `s.spm_dependency` to bind the package to this pod.
+  #
+  # 2. Bare RN (react-native-macos) — consumer Podfile sets
+  #    `ENV['RNSE_USE_RN_SPM'] = '1'` and uses RN's first-party
+  #    `spm_dependency` top-level helper from react_native_pods.rb. This
+  #    bypasses cocoapods-spm entirely (it has an unfixed Xcode 26
+  #    regression — issue #172). Consumers must also set
+  #    `use_frameworks! :linkage => :dynamic` so the SwiftPackage product
+  #    links cleanly into the Pods project.
+  if ENV['RNSE_USE_RN_SPM'] == '1'
+    spm_dependency s,
+      url: 'https://github.com/krzyzanowskim/STTextView',
+      requirement: { kind: 'upToNextMajorVersion', minimumVersion: '2.3.10' },
+      products: ['STTextView']
+  else
+    s.spm_dependency 'STTextView/STTextView'
+  end
 
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
