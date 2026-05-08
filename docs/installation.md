@@ -13,9 +13,23 @@ Once v1 ships, it will be published as `@workspace-sh/react-native-source-editor
 | Platform | Minimum |
 | --- | --- |
 | iOS | 16.0 |
-| macOS | 14.0 |
+| macOS | 14.0 (target — pending [#27](https://github.com/workspace-sh/react-native-source-editor/issues/27)) |
 
-These are STTextView's floors. Bump your app's targets accordingly. For Expo apps use [`expo-build-properties`](https://docs.expo.dev/versions/latest/sdk/build-properties/):
+These are STTextView's floors. Bump your app's targets accordingly.
+
+## Swift Package Manager bridging
+
+STTextView is distributed only via SPM, so consumer apps need the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin during `pod install`:
+
+```sh
+gem install cocoapods-spm
+```
+
+How it gets wired into the `Podfile` depends on which toolchain you use.
+
+### Expo CNG (recommended)
+
+Register this library as a config plugin in `app.json`. The plugin injects `plugin 'cocoapods-spm'` and the `spm_pkg 'STTextView'` block into the generated `Podfile` during `expo prebuild` — you don't hand-edit anything:
 
 ```json
 {
@@ -28,37 +42,39 @@ These are STTextView's floors. Bump your app's targets accordingly. For Expo app
 }
 ```
 
-`useFrameworks: "static"` is required because `cocoapods-spm` (used to bridge STTextView's SPM-only distribution) needs `use_frameworks!`.
+`useFrameworks: "static"` is required — `cocoapods-spm` needs `use_frameworks!`.
 
-## Swift Package Manager bridging
+Build with `expo run:ios`. **Do not run `pod install` manually**: Expo CNG owns the pod lifecycle and a manual install will desync against the generated project.
 
-STTextView is distributed only via SPM, so consumer apps need the [`cocoapods-spm`](https://github.com/trinhngocthuyen/cocoapods-spm) plugin during `pod install`:
+### Bare React Native / react-native-macos
 
-```sh
-gem install cocoapods-spm
+Edit `ios/Podfile` (or `macos/Podfile`) by hand:
+
+```ruby
+plugin 'cocoapods-spm'
+
+target 'YourApp' do
+  config = use_native_modules!
+  use_frameworks! :linkage => :static
+
+  spm_pkg 'STTextView',
+    :url => 'https://github.com/krzyzanowskim/STTextView.git',
+    :version => '2.3.10',
+    :products => ['STTextView']
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => true,
+    :fabric_enabled => true,
+  )
+end
 ```
 
-The Podfile mods it requires (`plugin 'cocoapods-spm'` plus the `spm_pkg 'STTextView'` block) are injected automatically by our config plugin during `expo prebuild` — you don't hand-edit `Podfile`. Just add the package to `app.json` plugins as shown above.
+Then `pod install` as normal.
 
-> If you're not using Expo CNG (i.e. you manage `ios/` directly), add the snippets manually:
->
-> ```ruby
-> plugin 'cocoapods-spm'
->
-> # …
->
-> target 'YourApp' do
->   use_expo_modules!
->
->   spm_pkg 'STTextView',
->     :url => 'https://github.com/krzyzanowskim/STTextView.git',
->     :version => '2.3.10',
->     :products => ['STTextView']
->
->   # …
-> end
-> ```
+> **Note on macOS:** the library currently ships Swift sources, which collide with how react-native-macos 0.81 resolves Swift module maps in CocoaPods. The `:osx` platform is intentionally not declared in the podspec until [#27](https://github.com/workspace-sh/react-native-source-editor/issues/27) ports the Swift impl to Obj-C++. `example/macos-app/` is scaffolded for future use but does not build today.
 
-## Working example
+## Working examples
 
-See [`example/ios-app/`](../example/ios-app/) for a complete working Expo SDK 55 setup.
+- iOS (Expo CNG): [`example/ios-app/`](../example/ios-app/) — runnable with `npm run ios:run` from the repo root.
+- macOS (bare RN-macos): [`example/macos-app/`](../example/macos-app/) — scaffolded, pending [#27](https://github.com/workspace-sh/react-native-source-editor/issues/27).
