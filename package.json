@@ -1,6 +1,6 @@
 {
   "name": "@workspace-sh/react-native-source-editor",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Native source editor for React Native, wrapping STTextView for iOS and macOS.",
   "main": "lib/module/index.js",
   "types": "lib/typescript/src/index.d.ts",
