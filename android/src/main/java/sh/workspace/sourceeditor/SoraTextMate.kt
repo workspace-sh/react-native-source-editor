@@ -23,8 +23,12 @@ import org.eclipse.tm4e.core.registry.IThemeSource
  * never set.
  */
 internal object SoraTextMate {
-  private const val THEME_NAME = "dark_modern"
-  private const val THEME_PATH = "textmate/themes/dark_modern.json"
+  // Bundled `darcula.json` is taken verbatim from sora-editor's sample app
+  // — it parses cleanly under Sora's strict-Gson `TMParserJSON`. VS Code's
+  // own theme files are JSONC (trailing commas) and break that parser, so
+  // they're not viable as drop-in assets.
+  private const val THEME_NAME = "darcula"
+  private const val THEME_PATH = "textmate/themes/darcula.json"
   private const val LANGUAGES_MANIFEST = "textmate/languages.json"
 
   /**
