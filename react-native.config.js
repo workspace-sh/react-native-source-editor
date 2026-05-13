@@ -6,7 +6,9 @@ module.exports = {
     platforms: {
       // ios + macos use the root podspec; nothing extra to declare.
       ios: {},
-      android: null,
+      // android/ houses a bare RN Fabric library wrapping Sora-Editor;
+      // defaults pick up `SourceEditorPackage` via reflection.
+      android: {},
     },
   },
 };

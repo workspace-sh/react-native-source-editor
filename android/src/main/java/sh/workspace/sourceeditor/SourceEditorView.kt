@@ -1,30 +1,72 @@
 package sh.workspace.sourceeditor
 
 import android.content.Context
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
+import android.widget.FrameLayout
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.UIManagerHelper
+import io.github.rosemoe.sora.event.ContentChangeEvent
+import io.github.rosemoe.sora.event.SelectionChangeEvent
+import io.github.rosemoe.sora.widget.CodeEditor
+import sh.workspace.sourceeditor.events.OnChangeTextEvent
+import sh.workspace.sourceeditor.events.OnSelectionChangeEvent
 
-class SourceEditorView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  // Creates and initializes an event dispatcher for the `onLoad` event.
-  // The name of the event is inferred from the value and needs to match the event name defined in the module.
-  private val onLoad by EventDispatcher()
+/**
+ * Fabric host view. A FrameLayout that owns a single child Sora-Editor
+ * `CodeEditor`. Mirrors the iOS/macOS impl shape: simple wrapper that
+ * forwards prop setters to the underlying editor and dispatches
+ * Fabric events on text/selection changes.
+ *
+ * MVP surface: text, editable, onChangeText, onSelectionChange,
+ * focus/blur. Future PRs add font, theme, language (TextMate
+ * highlighting), lineNumbers, contentInsets.
+ */
+class SourceEditorView(context: Context) : FrameLayout(context) {
 
-  // Defines a WebView that will be used as the root subview.
-  internal val webView = WebView(context).apply {
+  internal val editor = CodeEditor(context).apply {
     layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-    webViewClient = object : WebViewClient() {
-      override fun onPageFinished(view: WebView, url: String) {
-        // Sends an event to JavaScript. Triggers a callback defined on the view component in JavaScript.
-        onLoad(mapOf("url" to url))
-      }
-    }
   }
 
   init {
-    // Adds the WebView to the view hierarchy.
-    addView(webView)
+    addView(editor)
+
+    // Sora-Editor's event system (`subscribeEvent`) is the recommended
+    // hook — `setOnTextChangeListener` is deprecated.
+    editor.subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
+      dispatchEvent(OnChangeTextEvent(surfaceId(), id, editor.text.toString()))
+    }
+    editor.subscribeEvent(SelectionChangeEvent::class.java) { event, _ ->
+      val start = event.left.index
+      val end = event.right.index
+      dispatchEvent(OnSelectionChangeEvent(surfaceId(), id, start, end))
+    }
+  }
+
+  fun setText(value: String?) {
+    val next = value ?: ""
+    if (editor.text.toString() != next) {
+      // Sora's `setText(CharSequence)` overload preserves the cursor
+      // position; the (CharSequence, Bundle?) overload is for state
+      // restoration. We don't need either second-arg here.
+      editor.setText(next)
+    }
+  }
+
+  fun setEditable(value: Boolean) {
+    editor.isEditable = value
+  }
+
+  fun focusEditor() {
+    editor.requestFocus()
+  }
+
+  fun blurEditor() {
+    editor.clearFocus()
+  }
+
+  private fun surfaceId(): Int = UIManagerHelper.getSurfaceId(this)
+
+  private fun <T : com.facebook.react.uimanager.events.Event<T>> dispatchEvent(event: T) {
+    val reactContext = context as? ReactContext ?: return
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)?.dispatchEvent(event)
   }
 }
