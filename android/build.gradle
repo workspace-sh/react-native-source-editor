@@ -35,5 +35,9 @@ dependencies {
   // LGPL-2.1, consumed dynamically as a Gradle `implementation` AAR (no
   // source modification, no static linking) so consumers inherit MIT.
   // See README for the license boundary note.
-  implementation 'io.github.Rosemoe.sora-editor:editor:0.24.5'
+  //
+  // Maven Central tops out at 0.23.x — GitHub Releases tagged 0.24.x are
+  // pre-release builds not published there. Stick with the latest Maven
+  // Central release.
+  implementation 'io.github.Rosemoe.sora-editor:editor:0.23.6'
 }

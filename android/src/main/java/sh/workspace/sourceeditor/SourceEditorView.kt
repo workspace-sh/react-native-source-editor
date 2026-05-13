@@ -44,9 +44,10 @@ class SourceEditorView(context: Context) : FrameLayout(context) {
   fun setText(value: String?) {
     val next = value ?: ""
     if (editor.text.toString() != next) {
-      // `cursorAtEnd = false` keeps the caret near its old position rather
-      // than jumping to the end on every prop update.
-      editor.setText(next, false)
+      // Sora's `setText(CharSequence)` overload preserves the cursor
+      // position; the (CharSequence, Bundle?) overload is for state
+      // restoration. We don't need either second-arg here.
+      editor.setText(next)
     }
   }
 

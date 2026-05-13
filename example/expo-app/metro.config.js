@@ -6,7 +6,8 @@ const moduleRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
-// This is the iOS-only example app; don't waste cycles bundling for macOS / web.
+// Cross-platform Expo CNG example (iOS + Android). macos-app is a separate
+// project on a different toolchain.
 config.resolver.platforms = ['ios', 'android', 'native'];
 
 config.resolver.blockList = [
