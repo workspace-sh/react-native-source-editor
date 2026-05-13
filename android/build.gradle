@@ -1,18 +1,39 @@
-plugins {
-  id 'com.android.library'
-  id 'expo-module-gradle-plugin'
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'com.facebook.react'
+
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-group = 'sh.workspace.sourceeditor'
-version = '0.1.0'
-
 android {
-  namespace "sh.workspace.sourceeditor"
+  namespace 'sh.workspace.sourceeditor'
+  // Sora-Editor 0.24.x requires minSdk 24; matches the RN 0.81 template.
+  compileSdkVersion safeExtGet('compileSdkVersion', 35)
+  buildToolsVersion safeExtGet('buildToolsVersion', '35.0.0')
+
   defaultConfig {
-    versionCode 1
-    versionName "0.1.0"
+    minSdkVersion safeExtGet('minSdkVersion', 24)
+    targetSdkVersion safeExtGet('targetSdkVersion', 35)
   }
+
+  buildFeatures {
+    buildConfig true
+  }
+
   lintOptions {
     abortOnError false
   }
+}
+
+dependencies {
+  // RN's gradle plugin manages the version. `react-android` is the modern
+  // artifact name (RN 0.71+); old `react-native` coordinate is deprecated.
+  implementation 'com.facebook.react:react-android'
+
+  // Sora-Editor by Rosemoe — the Android STTextView-analog.
+  // LGPL-2.1, consumed dynamically as a Gradle `implementation` AAR (no
+  // source modification, no static linking) so consumers inherit MIT.
+  // See README for the license boundary note.
+  implementation 'io.github.Rosemoe.sora-editor:editor:0.24.5'
 }

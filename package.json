@@ -17,10 +17,14 @@
     "src",
     "lib",
     "ios",
+    "android/build.gradle",
+    "android/gradle.properties",
+    "android/src",
     "react-native.config.js",
     "app.plugin.js",
     "*.podspec",
     "!ios/build",
+    "!android/build",
     "!**/__tests__",
     "!**/.*"
   ],
@@ -42,7 +46,13 @@
     "macos:start": "cd example/macos-app && npx react-native start",
     "macos:clear": "cd example/macos-app && watchman watch-del-all && npx react-native start --reset-cache",
     "macos:run": "cd example/macos-app && npx react-native run-macos",
-    "macos:dev": "concurrently \"npm run macos:clear\" \"npm run macos:run\""
+    "macos:dev": "concurrently \"npm run macos:clear\" \"npm run macos:run\"",
+    "android:install": "cd example/android-app && npm install --legacy-peer-deps",
+    "android:clean": "cd example/android-app/android && ./gradlew clean",
+    "android:start": "cd example/android-app && npx react-native start",
+    "android:clear": "cd example/android-app && watchman watch-del-all && npx react-native start --reset-cache",
+    "android:run": "cd example/android-app && npx react-native run-android",
+    "android:dev": "concurrently \"npm run android:clear\" \"npm run android:run\""
   },
   "keywords": [
     "react-native",
@@ -51,8 +61,10 @@
     "text-editor",
     "source-editor",
     "STTextView",
+    "sora-editor",
     "ios",
-    "macos"
+    "macos",
+    "android"
   ],
   "repository": {
     "type": "git",
@@ -95,6 +107,9 @@
           "className": "SourceEditor"
         }
       }
+    },
+    "android": {
+      "javaPackageName": "sh.workspace.sourceeditor"
     },
     "includesGeneratedCode": false
   }
