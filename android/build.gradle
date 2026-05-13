@@ -21,6 +21,14 @@ android {
     buildConfig true
   }
 
+  // Sora-Editor's language-textmate uses Java APIs not available below
+  // API 26 (java.time, etc.). Core library desugaring polyfills them.
+  compileOptions {
+    coreLibraryDesugaringEnabled true
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+
   lintOptions {
     abortOnError false
   }
@@ -40,4 +48,10 @@ dependencies {
   // pre-release builds not published there. Stick with the latest Maven
   // Central release.
   implementation 'io.github.Rosemoe.sora-editor:editor:0.23.6'
+  // TextMate grammar engine — VS Code-style .tmLanguage.json grammars
+  // bundled as Android assets under src/main/assets/textmate/.
+  implementation 'io.github.Rosemoe.sora-editor:language-textmate:0.23.6'
+  // Polyfills java.time etc. that language-textmate's Joni regex engine
+  // needs on minSdk < 26.
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }

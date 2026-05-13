@@ -52,7 +52,7 @@ class SourceEditorViewManager :
   }
 
   override fun setLanguage(view: SourceEditorView, value: String?) {
-    // TODO(#32): wire to Sora's TextMate language registry.
+    view.setLanguage(value)
   }
 
   override fun setLineNumbers(view: SourceEditorView, value: Boolean) {

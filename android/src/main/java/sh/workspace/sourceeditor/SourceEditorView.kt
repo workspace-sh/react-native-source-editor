@@ -55,6 +55,10 @@ class SourceEditorView(context: Context) : FrameLayout(context) {
     editor.isEditable = value
   }
 
+  fun setLanguage(value: String?) {
+    SoraTextMate.apply(context, editor, value)
+  }
+
   fun focusEditor() {
     editor.requestFocus()
   }
