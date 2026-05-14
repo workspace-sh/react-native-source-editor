@@ -48,7 +48,7 @@ class SourceEditorViewManager :
   }
 
   override fun setTheme(view: SourceEditorView, value: String?) {
-    // TODO(#32): map light/dark/auto → Sora color schemes.
+    view.setTheme(value)
   }
 
   override fun setLanguage(view: SourceEditorView, value: String?) {
