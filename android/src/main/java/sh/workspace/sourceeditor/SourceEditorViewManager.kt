@@ -44,7 +44,7 @@ class SourceEditorViewManager :
   //     interface or the class won't compile). ---
 
   override fun setFont(view: SourceEditorView, value: ReadableMap?) {
-    // TODO(#32): wire to Sora's typeface API.
+    view.setFont(value)
   }
 
   override fun setTheme(view: SourceEditorView, value: String?) {
@@ -56,11 +56,11 @@ class SourceEditorViewManager :
   }
 
   override fun setLineNumbers(view: SourceEditorView, value: Boolean) {
-    // TODO(#32): toggle Sora's line-number gutter.
+    view.setLineNumbers(value)
   }
 
   override fun setContentInsets(view: SourceEditorView, value: ReadableMap?) {
-    // TODO(#32): wire to editor padding.
+    view.setContentInsets(value)
   }
 
   // --- Commands ---

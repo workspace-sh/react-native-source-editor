@@ -1,8 +1,11 @@
 package sh.workspace.sourceeditor
 
 import android.content.Context
+import android.graphics.Typeface
+import android.util.TypedValue
 import android.widget.FrameLayout
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.uimanager.UIManagerHelper
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -57,6 +60,45 @@ class SourceEditorView(context: Context) : FrameLayout(context) {
 
   fun setLanguage(value: String?) {
     SoraTextMate.apply(context, editor, value)
+  }
+
+  fun setFont(value: ReadableMap?) {
+    val family = value?.takeIf { it.hasKey("family") }?.getString("family")
+    val sizePt = value?.takeIf { it.hasKey("size") }?.getDouble("size") ?: 0.0
+    // Match Apple's `monospacedSystemFont(ofSize: 14)` default when size
+    // is missing or non-positive.
+    val resolvedSize = if (sizePt > 0.0) sizePt.toFloat() else 14f
+    val typeface = if (!family.isNullOrEmpty()) {
+      // Best-effort match. `Typeface.create(family, NORMAL)` falls back
+      // to the default sans-serif on miss; that mirrors UIKit's
+      // behaviour when a custom UIFont(name:) returns nil and we use
+      // the system mono.
+      Typeface.create(family, Typeface.NORMAL)
+    } else {
+      Typeface.MONOSPACE
+    }
+    editor.typefaceText = typeface
+    editor.setTextSize(resolvedSize)
+  }
+
+  fun setContentInsets(value: ReadableMap?) {
+    val top = value?.takeIf { it.hasKey("top") }?.getDouble("top") ?: 0.0
+    val bottom = value?.takeIf { it.hasKey("bottom") }?.getDouble("bottom") ?: 0.0
+    val left = value?.takeIf { it.hasKey("left") }?.getDouble("left") ?: 0.0
+    val right = value?.takeIf { it.hasKey("right") }?.getDouble("right") ?: 0.0
+    // RN passes density-independent pixels (dp); Android View.setPadding
+    // takes raw pixels. Convert via the display metrics.
+    fun dp(value: Double): Int =
+      TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        value.toFloat(),
+        context.resources.displayMetrics
+      ).toInt()
+    editor.setPadding(dp(left), dp(top), dp(right), dp(bottom))
+  }
+
+  fun setLineNumbers(value: Boolean) {
+    editor.isLineNumberEnabled = value
   }
 
   fun focusEditor() {
