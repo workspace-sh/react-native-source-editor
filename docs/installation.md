@@ -14,10 +14,16 @@ Once v1 ships, it will be published as `@workspace-sh/react-native-source-editor
 | --- | --- |
 | iOS | 16.0 |
 | macOS | 14.0 |
+| Android | API 24 (Android 7.0) |
 
-These are STTextView's floors. Bump your app's targets accordingly.
+iOS / macOS minimums are STTextView's floors; Android's is Sora-Editor's. Bump your app's targets accordingly.
 
-## Swift Package Manager bridging
+## Backing libraries
+
+- **iOS / macOS**: [STTextView](https://github.com/krzyzanowskim/STTextView) (Swift / SPM-only).
+- **Android**: [Sora-Editor](https://github.com/Rosemoe/sora-editor) (Kotlin, Maven Central).
+
+## Swift Package Manager bridging (iOS / macOS)
 
 STTextView is distributed only via SPM. The two supported toolchains use different bridges, picked by an env var the library podspec reads:
 
@@ -107,7 +113,49 @@ target 'YourApp' do
 end
 ```
 
+## Android (Expo CNG)
+
+No SPM, no extra gem — Sora-Editor comes from Maven Central, autolinked via the standard React Native gradle plugin.
+
+The same Expo config plugin entry that handles iOS also injects `coreLibraryDesugaring` into `android/app/build.gradle`. Sora's `language-textmate` AAR declares a desugaring requirement (its [Joni](https://github.com/jruby/joni) regex engine uses `java.time` on `minSdk < 26`); without it, your Android build fails at `checkDebugAarMetadata`.
+
+```json
+{
+  "plugins": [
+    "@workspace-sh/react-native-source-editor",
+    ["expo-build-properties", {
+      "ios": { "deploymentTarget": "16.0", "useFrameworks": "static" },
+      "android": { "minSdkVersion": 24, "newArchEnabled": true }
+    }]
+  ]
+}
+```
+
+Build with `expo run:android`. Same as iOS, **don't hand-edit the generated `android/` directory** — Expo CNG owns it and your changes will be overwritten on the next prebuild.
+
+### Bare React Native — Android
+
+If you're not on Expo CNG, your `android/app/build.gradle` needs the same desugaring config that the plugin injects. Add to the `android { ... }` block:
+
+```groovy
+compileOptions {
+  coreLibraryDesugaringEnabled true
+  sourceCompatibility JavaVersion.VERSION_17
+  targetCompatibility JavaVersion.VERSION_17
+}
+```
+
+…and to the `dependencies { ... }` block:
+
+```groovy
+coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+```
+
+### License note for Android
+
+Sora-Editor is **LGPL-2.1**. We consume it dynamically as a Gradle `implementation` AAR — no source modification, no static linking — which is the standard pattern that lets MIT-licensed downstream apps depend on this library without inheriting LGPL relinking obligations on their own code. **Don't fork the AAR or relink statically** unless you're prepared to take on those obligations yourself.
+
 ## Working examples
 
-- iOS (Expo CNG): [`example/ios-app/`](../example/ios-app/) — runnable with `npm run ios:run` from the repo root.
+- iOS + Android (Expo CNG): [`example/expo-app/`](../example/expo-app/) — runnable with `npm run ios:run` and `npm run android:run` from the repo root.
 - macOS (bare RN-macos): [`example/macos-app/`](../example/macos-app/) — runnable with `npm run macos:dev` from the repo root.
