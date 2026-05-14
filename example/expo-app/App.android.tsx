@@ -30,23 +30,98 @@ const LANGUAGES: Language[] = [
   'html',
 ];
 
-const SAMPLE = `// SourceEditor — Android MVP
-//
-// MVP wires text, editable, onChangeText, onSelectionChange,
-// focus/blur. font / theme / language highlighting / lineNumbers /
-// contentInsets land in follow-up PRs (tracked in #32).
+// Per-language samples so switching tabs visibly re-highlights — a JS
+// blob viewed under the markdown grammar (etc.) tokenises as plain
+// paragraph text, which looks like "lost highlighting" but is correct.
+const SAMPLES: Record<Language, string> = {
+  plaintext: `SourceEditor — Android MVP
 
-function greet(name) {
-  return \`hello, \${name}\`;
+Backed by Sora-Editor (Java/Kotlin) on Android, mirroring the iOS / macOS
+STTextView wrapper. Plaintext tab shows the editor without any grammar
+applied — switch tabs to see TextMate highlighting.
+`,
+  markdown: `# SourceEditor
+
+Native source editor for **React Native**.
+
+- iOS / macOS via *STTextView*
+- Android via *Sora-Editor*
+
+Inline \`code\` looks like this. Switch tabs to see other grammars.
+
+## Tokens
+
+- Headings (\`#\`, \`##\`, …)
+- **Bold**, *italic*
+- Inline \`code\`
+- [Links](https://example.com)
+`,
+  json: `{
+  "name": "@workspace-sh/react-native-source-editor",
+  "version": "0.1.0",
+  "private": true,
+  "platforms": ["ios", "macos", "android"],
+  "android": {
+    "minSdkVersion": 24,
+    "newArchEnabled": true
+  }
 }
-`;
+`,
+  javascript: `const name = 'SourceEditor';
+const features = ['markdown', 'json', 'js', 'ts', 'html'];
+
+console.log('Hello from', name);
+console.log('Supported:', features);
+
+try {
+  JSON.parse('not json');
+} catch (e) {
+  console.error('Caught:', e.message);
+}
+`,
+  typescript: `type Greeting = 'hello' | 'hi' | 'hey';
+
+interface Person {
+  name: string;
+  greeting: Greeting;
+}
+
+const people: Person[] = [
+  { name: 'Alice', greeting: 'hello' },
+  { name: 'Bob', greeting: 'hey' },
+];
+
+people.forEach((p) => {
+  console.log(\`\${p.greeting}, \${p.name}!\`);
+});
+`,
+  html: `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: sans-serif; padding: 24px; }
+  h1 { color: #0a84ff; }
+</style>
+</head>
+<body>
+  <h1>SourceEditor</h1>
+  <p>HTML highlighted by TextMate via Sora-Editor.</p>
+</body>
+</html>
+`,
+};
 
 function Demo() {
   const insets = useSafeAreaInsets();
   const editorRef = useRef<SourceEditorRef>(null);
-  const [text, setText] = useState(SAMPLE);
   const [language, setLanguage] = useState<Language>('javascript');
+  const [text, setText] = useState(SAMPLES.javascript);
   const [selection, setSelection] = useState({ start: 0, end: 0 });
+
+  const onLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    setText(SAMPLES[lang]);
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -54,7 +129,7 @@ function Demo() {
         {LANGUAGES.map((lang) => (
           <Pressable
             key={lang}
-            onPress={() => setLanguage(lang)}
+            onPress={() => onLanguageChange(lang)}
             style={[
               styles.langChip,
               language === lang && styles.langChipActive,
