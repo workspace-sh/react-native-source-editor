@@ -136,6 +136,7 @@ function Demo() {
   const [text, setText] = useState(SAMPLES.javascript);
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [lineNumbers, setLineNumbers] = useState(false);
 
   const isPreviewable =
     language === 'markdown' ||
@@ -214,6 +215,9 @@ function Demo() {
           value={text}
           editable
           language={language}
+          lineNumbers={lineNumbers}
+          font={{ size: 13 }}
+          contentInsets={{ top: 12, bottom: 12, left: 8, right: 8 }}
           onChangeText={setText}
           onSelectionChange={setSelection}
           style={styles.editor}
@@ -249,6 +253,15 @@ function Demo() {
         )}
         {!showPreview && (
           <>
+            <Pressable
+              onPress={() => setLineNumbers((v) => !v)}
+              style={[
+                styles.statusButton,
+                lineNumbers && styles.statusButtonActive,
+              ]}
+            >
+              <Text style={styles.statusButtonText}>#</Text>
+            </Pressable>
             <Pressable
               onPress={() => editorRef.current?.focus()}
               style={styles.statusButton}
@@ -310,6 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#222',
   },
+  statusButtonActive: { backgroundColor: '#0a84ff' },
   statusButtonText: { color: '#fff', fontSize: 12 },
   segmented: {
     flexDirection: 'row',
