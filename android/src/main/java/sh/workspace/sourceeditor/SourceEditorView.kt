@@ -59,7 +59,11 @@ class SourceEditorView(context: Context) : FrameLayout(context) {
   }
 
   fun setLanguage(value: String?) {
-    SoraTextMate.apply(context, editor, value)
+    SoraTextMate.applyLanguage(context, editor, value)
+  }
+
+  fun setTheme(value: String?) {
+    SoraTextMate.applyTheme(context, editor, value)
   }
 
   fun setFont(value: ReadableMap?) {

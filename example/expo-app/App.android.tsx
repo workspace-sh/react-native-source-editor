@@ -28,6 +28,7 @@ import { marked } from 'marked';
 import SourceEditor, {
   type Language,
   type SourceEditorRef,
+  type Theme,
 } from '@workspace-sh/react-native-source-editor';
 import {
   stripTSTypes,
@@ -137,6 +138,7 @@ function Demo() {
   const [viewMode, setViewMode] = useState<ViewMode>('source');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [lineNumbers, setLineNumbers] = useState(false);
+  const [theme, setTheme] = useState<Theme>('auto');
 
   const isPreviewable =
     language === 'markdown' ||
@@ -216,6 +218,7 @@ function Demo() {
           editable
           language={language}
           lineNumbers={lineNumbers}
+          theme={theme}
           font={{ size: 13 }}
           contentInsets={{ top: 12, bottom: 12, left: 8, right: 8 }}
           onChangeText={setText}
@@ -253,6 +256,27 @@ function Demo() {
         )}
         {!showPreview && (
           <>
+            <View style={styles.segmented}>
+              {(['auto', 'light', 'dark'] as const).map((t) => (
+                <Pressable
+                  key={t}
+                  onPress={() => setTheme(t)}
+                  style={[
+                    styles.segmentedButton,
+                    theme === t && styles.segmentedButtonActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentedText,
+                      theme === t && styles.segmentedTextActive,
+                    ]}
+                  >
+                    {t[0].toUpperCase()}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <Pressable
               onPress={() => setLineNumbers((v) => !v)}
               style={[
