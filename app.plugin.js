@@ -1,4 +1,4 @@
-const { withPodfile } = require('@expo/config-plugins');
+const { withPodfile, withAppBuildGradle } = require('@expo/config-plugins');
 
 const STTEXTVIEW_URL = 'https://github.com/krzyzanowskim/STTextView.git';
 const STTEXTVIEW_VERSION = '2.3.10';
@@ -52,14 +52,71 @@ function injectSpmPkg(contents) {
   return contents.replace(anchor, (match) => `${match}\n${SPM_PKG_BLOCK}\n`);
 }
 
+// Sora-Editor's `language-textmate` AAR declares it requires core library
+// desugaring (it pulls in joni, which uses java.time on minSdk < 26).
+// The consuming app must enable it; we inject the Gradle setting + dep
+// here so consumers don't have to hand-edit android/app/build.gradle.
+const DESUGAR_DEP =
+  "coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'";
+const DESUGAR_MARKER = 'desugar_jdk_libs';
+
+function injectCoreLibraryDesugaring(contents) {
+  if (contents.includes(DESUGAR_MARKER)) return contents;
+
+  // Add `coreLibraryDesugaringEnabled true` to the existing
+  // `compileOptions { ... }` block, or create the block if absent.
+  const compileOptionsMatch = contents.match(
+    /compileOptions\s*\{([\s\S]*?)\n\s*\}/
+  );
+  if (compileOptionsMatch) {
+    const inner = compileOptionsMatch[1];
+    if (!inner.includes('coreLibraryDesugaringEnabled')) {
+      contents = contents.replace(
+        compileOptionsMatch[0],
+        compileOptionsMatch[0].replace(
+          inner,
+          `${inner}\n        coreLibraryDesugaringEnabled true`
+        )
+      );
+    }
+  } else {
+    // No compileOptions block — drop one in just after the `android {` line.
+    contents = contents.replace(
+      /android\s*\{/,
+      `android {\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n    }`
+    );
+  }
+
+  // Append the desugar_jdk_libs dep to the existing top-level
+  // `dependencies { ... }` block.
+  const depsMatch = contents.match(/\ndependencies\s*\{([\s\S]*?)\n\}/);
+  if (!depsMatch) {
+    throw new Error(
+      "[react-native-source-editor] Could not find `dependencies { ... }` in app/build.gradle to anchor the desugar_jdk_libs dep."
+    );
+  }
+  return contents.replace(
+    depsMatch[0],
+    depsMatch[0].replace(/\n\}$/, `\n    ${DESUGAR_DEP}\n}`)
+  );
+}
+
 const withSourceEditor = (config) => {
-  return withPodfile(config, (config) => {
+  config = withPodfile(config, (config) => {
     let contents = config.modResults.contents;
     contents = injectPluginDeclaration(contents);
     contents = injectSpmPkg(contents);
     config.modResults.contents = contents;
     return config;
   });
+  config = withAppBuildGradle(config, (config) => {
+    if (config.modResults.language !== 'groovy') return config;
+    config.modResults.contents = injectCoreLibraryDesugaring(
+      config.modResults.contents
+    );
+    return config;
+  });
+  return config;
 };
 
 module.exports = withSourceEditor;
