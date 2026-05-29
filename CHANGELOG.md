@@ -8,6 +8,19 @@ Pre-1.0, the JS API may evolve between minor versions. See the README's roadmap.
 
 ## [Unreleased]
 
+### Added
+
+- **Android support.** Bare RN Fabric component wrapping [Sora-Editor](https://github.com/Rosemoe/sora-editor) 0.23.6 (LGPL-2.1, consumed dynamically as a Gradle `implementation` AAR). Targets react-native 0.81 New Architecture, minSdk 24. ([#34](https://github.com/workspace-sh/react-native-source-editor/pull/34), closes [#33](https://github.com/workspace-sh/react-native-source-editor/issues/33))
+- **TextMate syntax highlighting on Android** for the existing six languages (markdown / json / javascript / typescript / html). VS Code 1.94.0 grammars + `darcula.json` theme bundled as Android assets. ([#36](https://github.com/workspace-sh/react-native-source-editor/pull/36), closes [#35](https://github.com/workspace-sh/react-native-source-editor/issues/35))
+- **`font`, `contentInsets`, `lineNumbers` on Android.** `font` → Sora `typefaceText` + `textSize`; `contentInsets` → `View.setPadding` with dp→px conversion; `lineNumbers` → `editor.isLineNumberEnabled`. ([#38](https://github.com/workspace-sh/react-native-source-editor/pull/38), closes [#37](https://github.com/workspace-sh/react-native-source-editor/issues/37))
+- **`theme` prop on Android.** `light` / `dark` map to bundled TextMate themes; `auto` reads `Configuration.UI_MODE_NIGHT_MASK`. ([#40](https://github.com/workspace-sh/react-native-source-editor/pull/40), closes [#39](https://github.com/workspace-sh/react-native-source-editor/issues/39))
+- **Expo config plugin: Android support.** `app.plugin.js` now also injects `coreLibraryDesugaring` into `android/app/build.gradle` (Sora's TextMate AAR requires it on minSdk < 26). Same plugin entry covers both platforms. ([#36](https://github.com/workspace-sh/react-native-source-editor/pull/36))
+- **CI: Android + macOS jobs.** GitHub Actions now builds all three platforms on every PR. ([#42](https://github.com/workspace-sh/react-native-source-editor/pull/42), closes [#41](https://github.com/workspace-sh/react-native-source-editor/issues/41))
+
+### Changed
+
+- **`example/ios-app/` → `example/expo-app/`.** Same Expo CNG project now serves both iOS and Android — Expo prebuild generates `ios/` and `android/` from the same source. The bare-RN `example/macos-app/` stays separate (Expo doesn't support macOS). ([#34](https://github.com/workspace-sh/react-native-source-editor/pull/34))
+
 ## [0.1.0] — 2026-05-10
 
 First milestone tag. Both target platforms shipping; library not yet on npm (install via local path until v1.0).
