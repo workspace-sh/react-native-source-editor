@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [develop]
+  # Toolchain drift (`xcode-version: latest-stable`) can fail a run that a
+  # later Xcode builds cleanly, and GitHub refuses to retry runs older than a
+  # month — so allow a manual re-run without a no-op commit.
+  workflow_dispatch:
 
 jobs:
   typecheck:
