@@ -131,7 +131,10 @@ jobs:
 
   build-macos:
     name: Build (macOS, bare RN-macos)
-    runs-on: macos-15
+    # macos-15 caps at Xcode 26.3, whose toolchain cannot resolve the Swift
+    # back-deployment shims (`libswiftCompatibility56`) that the vendored SPM
+    # deps force-load — the same commit links clean under Xcode 26.6 locally.
+    runs-on: macos-26
     needs: typecheck
     steps:
       - uses: actions/checkout@v4
