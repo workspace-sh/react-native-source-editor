@@ -1,9 +1,11 @@
 {
   "name": "@workspace-sh/react-native-source-editor",
   "version": "0.1.0",
-  "description": "Native source editor for React Native, wrapping STTextView for iOS and macOS.",
-  "main": "lib/module/index.js",
-  "types": "lib/typescript/src/index.d.ts",
+  "description": "Native source editor for React Native, wrapping STTextView on iOS/macOS and Sora-Editor on Android.",
+  "source": "./src/index.ts",
+  "main": "./lib/module/index.js",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -30,6 +32,9 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "clean": "del-cli lib",
+    "build": "bob build",
+    "prepare": "bob build",
     "ios:plugin": "gem install cocoapods-spm",
     "ios:install": "cd example/expo-app && npm install",
     "ios:clean": "rm -rf example/expo-app/ios",
@@ -82,14 +87,25 @@
   },
   "license": "MIT",
   "homepage": "https://github.com/workspace-sh/react-native-source-editor#readme",
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "exclude": "**/{__tests__,__fixtures__,__mocks__}/**",
+    "targets": [
+      ["module", { "esm": true }],
+      "typescript"
+    ]
+  },
   "dependencies": {
     "@expo/config-plugins": "~55.0.8"
   },
   "devDependencies": {
     "@types/react": "~19.1.1",
     "concurrently": "^9.1.0",
+    "del-cli": "^7.0.0",
     "react": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-builder-bob": "^0.41.0",
     "typescript": "~5.9.2"
   },
   "peerDependencies": {

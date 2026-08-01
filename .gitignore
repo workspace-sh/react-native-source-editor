@@ -62,3 +62,6 @@ yarn-error.log
 
 # Claude Code per-user settings
 .claude/settings.local.json
+
+# Generated build output (bob)
+lib/
